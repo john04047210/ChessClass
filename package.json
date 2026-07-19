@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "prepare:stockfish": "node scripts/prepare-stockfish.mjs",
@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@playwright/test": "latest",
-    "@rolldown/binding-darwin-x64": "^1.2.0",
     "@testing-library/jest-dom": "latest",
     "@testing-library/react": "latest",
     "@types/node": "latest",

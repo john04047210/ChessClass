@@ -17,7 +17,7 @@
 
 Next.js App Router 静态导出、React、严格模式 TypeScript、Tailwind CSS、chess.js、Stockfish 18 Lite、Zod、Vitest 和 Playwright。棋盘是本项目内的无图片 React 网格组件，不依赖收费素材或服务。
 
-要求 Node.js 20.19 或更高版本。
+要求 Node.js 24 或更高版本。
 
 ```bash
 npm install
