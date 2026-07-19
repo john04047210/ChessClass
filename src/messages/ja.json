@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Kiro・AIチェスコーチ",
+    "description": "まったくの初心者向けチェスコーチ"
+  },
+  "common": {
+    "continue": "対局を続ける",
+    "restart": "新しい対局",
+    "undo": "待った",
+    "redo": "待ったを取り消す",
+    "loading": "準備中…",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "close": "閉じる"
+  },
+  "welcome": {
+    "eyebrow": "最初の一手から",
+    "title": "指しながらチェスを学ぼう",
+    "description": "登録は不要です。ニックネームを決めると、この端末に進み具合を保存します。",
+    "nickname": "ニックネーム",
+    "placeholder": "例：ルーキー",
+    "start": "学習を始める",
+    "required": "1〜20文字のニックネームを入力してください"
+  },
+  "header": {
+    "product": "Kiro",
+    "stage": "入門・実戦でルールを学ぶ",
+    "language": "言語",
+    "flip": "盤を反転",
+    "help": "ルールヘルプ",
+    "switchPlayer": "学習者を変更"
+  },
+  "game": {
+    "yourTurn": "あなたの番です",
+    "computerThinking": "コンピューターが考えています…",
+    "computerTurn": "コンピューターの番",
+    "opponent": "コンピューター対戦相手",
+    "you": "あなた",
+    "beginnerOpponent": "入門パートナー",
+    "engineFallback": "Stockfishを起動できないため、軽量な入門エンジンに切り替えました。",
+    "engineStockfish": "Stockfish 18 · 入門難度",
+    "engineStarter": "軽量入門エンジン · 入門難度",
+    "chooseEngine": "コンピューターエンジンを選択",
+    "playingWhite": "白を担当",
+    "check": "チェック！キングを守りましょう",
+    "checkmate": "チェックメイト・対局終了",
+    "draw": "引き分け",
+    "white": "白",
+    "black": "黒",
+    "illegal": "その手はルールに合いません。局面は変わっていません。",
+    "notYourPiece": "白の駒を選んでください。",
+    "notYourTurn": "今はコンピューターの番です。",
+    "gameOver": "対局は終了しました。新しい対局を始めてください。",
+    "promotion": "ポーンをどの駒に昇格しますか？",
+    "lastMove": "直前の手",
+    "newRule": "新しいルールを覚えました"
+  },
+  "coach": {
+    "title": "AIコーチ",
+    "local": "基本コーチ",
+    "openai": "AI強化",
+    "happened": "今起きたこと",
+    "intent": "もしかすると考えていたこと",
+    "opponent": "コンピューターの手の理由",
+    "observe": "次に見るポイント",
+    "empty": "最初の一手のあと、短く分かりやすく振り返ります。",
+    "more": "もう少し説明",
+    "hint": "ヒントをください",
+    "hint2": "もう少し具体的に",
+    "hint3": "おすすめの手を表示",
+    "fallback": "AI解説が利用できないため、基本コーチに切り替えました。",
+    "thinking": "このターンを振り返っています…"
+  },
+  "progress": {
+    "title": "進み具合",
+    "rules": "学んだルール",
+    "games": "終了した対局",
+    "moves": "合法手",
+    "mistakes": "よくあるミス",
+    "unit": "件"
+  },
+  "guide": {
+    "title": "まず覚えること",
+    "one": "白は盤の下から上へ進みます。あなたは白です。",
+    "two": "白が先手です。駒をクリックまたはドラッグし、光ったマスを選びます。",
+    "three": "ポーンは前進し、斜めに駒を取ります。中央のポーンから試しましょう。",
+    "next": "わかりました"
+  },
+  "help": {
+    "title": "基本ルール早見表",
+    "orientation": "右下は明るいマスです。白は下から上へ進みます。",
+    "pieces": "キングは1マス、クイーンは直線と斜め、ルークは直線、ビショップは斜め、ナイトはL字で駒を飛び越え、ポーンは前進して斜めに取ります。",
+    "check": "キングが攻撃されるとチェックです。次の手で必ず解消し、攻撃されるマスへは移動できません。",
+    "special": "ポーンは最終段で昇格します。条件を満たすとキングとルークでキャスリングできます。"
+  },
+  "reset": {
+    "title": "学習者を変更しますか？",
+    "description": "このブラウザのニックネーム、進み具合、未完了の対局が完全に削除されます。"
+  },
+  "pieces": {
+    "king": "キング",
+    "queen": "クイーン",
+    "rook": "ルーク",
+    "bishop": "ビショップ",
+    "knight": "ナイト",
+    "pawn": "ポーン"
+  },
+  "rules": {
+    "board_orientation": "盤の向き",
+    "board_coordinates": "盤の座標",
+    "white_moves_first": "白が先手",
+    "pawn_forward": "ポーンの前進",
+    "pawn_double_step": "ポーンの最初の2マス前進",
+    "pawn_diagonal_capture": "ポーンの斜め取り",
+    "knight_l_shape": "ナイトのL字移動",
+    "knight_can_jump": "ナイトは飛び越せる",
+    "bishop_diagonal": "ビショップの斜め移動",
+    "rook_straight": "ルークの直線移動",
+    "queen_combined_movement": "クイーンの動き",
+    "king_one_square": "キングは1マス",
+    "blocked_piece": "経路は駒で遮られる",
+    "check": "チェック",
+    "escape_check": "チェックの解消",
+    "checkmate": "チェックメイト",
+    "castling": "キャスリング",
+    "promotion": "プロモーション"
+  }
+}

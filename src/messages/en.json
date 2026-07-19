@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Kiro · AI Chess Coach",
+    "description": "A chess coach for complete beginners"
+  },
+  "common": {
+    "continue": "Keep playing",
+    "restart": "New game",
+    "undo": "Undo",
+    "redo": "Redo",
+    "loading": "Getting ready…",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+  "welcome": {
+    "eyebrow": "Start with move one",
+    "title": "Learn chess while you play",
+    "description": "No sign-up needed. Choose a nickname and we’ll save your progress on this device.",
+    "nickname": "Nickname",
+    "placeholder": "For example: Rookie",
+    "start": "Start learning",
+    "required": "Enter a nickname between 1 and 20 characters"
+  },
+  "header": {
+    "product": "Kiro",
+    "stage": "Beginner · Learn by playing",
+    "language": "Language",
+    "flip": "Flip board",
+    "help": "Rule help",
+    "switchPlayer": "Switch learner"
+  },
+  "game": {
+    "yourTurn": "Your turn",
+    "computerThinking": "Computer is thinking…",
+    "computerTurn": "Computer's turn",
+    "opponent": "Computer opponent",
+    "you": "You",
+    "beginnerOpponent": "Beginner partner",
+    "engineFallback": "Stockfish could not start, so the lightweight starter engine is being used.",
+    "engineStockfish": "Stockfish 18 · Beginner",
+    "engineStarter": "Lightweight starter engine · Beginner",
+    "chooseEngine": "Choose computer engine",
+    "playingWhite": "Playing White",
+    "check": "Check! Protect your king",
+    "checkmate": "Checkmate — game over",
+    "draw": "Draw",
+    "white": "White",
+    "black": "Black",
+    "illegal": "That move is not legal. The position has not changed.",
+    "notYourPiece": "Choose a white piece.",
+    "notYourTurn": "It is the computer's turn. Please wait.",
+    "gameOver": "The game is over. Start a new game to continue.",
+    "promotion": "Promote your pawn to…",
+    "lastMove": "Last move",
+    "newRule": "New rule learned"
+  },
+  "coach": {
+    "title": "AI Coach",
+    "local": "Basic coach",
+    "openai": "AI enhanced",
+    "happened": "What just happened",
+    "intent": "You may have been thinking",
+    "opponent": "Why the computer moved",
+    "observe": "What to notice next",
+    "empty": "After your first move, I’ll review each turn in short, clear sentences.",
+    "more": "Explain a little more",
+    "hint": "Give me a hint",
+    "hint2": "Make it more specific",
+    "hint3": "Show a suggested move",
+    "fallback": "AI explanations are unavailable, so the basic coach has taken over.",
+    "thinking": "The coach is reviewing this turn…"
+  },
+  "progress": {
+    "title": "Your progress",
+    "rules": "Rules learned",
+    "games": "Games finished",
+    "moves": "Legal moves",
+    "mistakes": "Common mistakes",
+    "unit": ""
+  },
+  "guide": {
+    "title": "One thing to remember",
+    "one": "White begins at the bottom and moves upward. You are White.",
+    "two": "White moves first. Click or drag a piece, then choose a highlighted square.",
+    "three": "Pawns move forward but capture diagonally. Try a central pawn first.",
+    "next": "Got it"
+  },
+  "help": {
+    "title": "Basic rules",
+    "orientation": "The bottom-right square should be light. White moves up the board.",
+    "pieces": "Kings move one square; queens move straight or diagonally; rooks straight; bishops diagonally; knights in an L and can jump; pawns move forward and capture diagonally.",
+    "check": "When the king is attacked, it is in check and the next move must answer it. A king may not move into attack.",
+    "special": "A pawn promotes on the last rank. A king and rook can castle when the conditions are met."
+  },
+  "reset": {
+    "title": "Switch learner?",
+    "description": "This permanently deletes the nickname, progress and unfinished game saved in this browser."
+  },
+  "pieces": {
+    "king": "king",
+    "queen": "queen",
+    "rook": "rook",
+    "bishop": "bishop",
+    "knight": "knight",
+    "pawn": "pawn"
+  },
+  "rules": {
+    "board_orientation": "Board orientation",
+    "board_coordinates": "Board coordinates",
+    "white_moves_first": "White moves first",
+    "pawn_forward": "Pawn moves forward",
+    "pawn_double_step": "Pawn's first double step",
+    "pawn_diagonal_capture": "Pawn captures diagonally",
+    "knight_l_shape": "Knight's L move",
+    "knight_can_jump": "Knight can jump",
+    "bishop_diagonal": "Bishop moves diagonally",
+    "rook_straight": "Rook moves straight",
+    "queen_combined_movement": "Queen movement",
+    "king_one_square": "King moves one square",
+    "blocked_piece": "Sliding pieces can be blocked",
+    "check": "Check",
+    "escape_check": "Escaping check",
+    "checkmate": "Checkmate",
+    "castling": "Castling",
+    "promotion": "Pawn promotion"
+  }
+}

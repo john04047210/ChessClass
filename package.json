@@ -1,0 +1,51 @@
+{
+  "name": "chess-ai-beginner-coach",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "prepare:stockfish": "node scripts/prepare-stockfish.mjs",
+    "predev": "npm run prepare:stockfish",
+    "dev": "next dev",
+    "prebuild": "npm run prepare:stockfish",
+    "build": "next build --webpack",
+    "start": "serve out",
+    "preview": "serve out",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:static": "playwright test --config=playwright.static.config.ts"
+  },
+  "dependencies": {
+    "chess.js": "latest",
+    "next": "latest",
+    "openai": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "serve": "latest",
+    "stockfish": "^18.0.8",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "@rolldown/binding-darwin-x64": "^1.2.0",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "autoprefixer": "latest",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "latest",
+    "jsdom": "latest",
+    "postcss": "latest",
+    "tailwindcss": "^3.4.17",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}

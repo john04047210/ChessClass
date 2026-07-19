@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "棋路 · AI 国际象棋陪练",
+    "description": "为零基础学习者设计的国际象棋陪练"
+  },
+  "common": {
+    "continue": "继续下棋",
+    "restart": "重新开始",
+    "undo": "悔棋",
+    "redo": "取消悔棋",
+    "loading": "正在准备…",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭"
+  },
+  "welcome": {
+    "eyebrow": "从第一步开始",
+    "title": "边下边学国际象棋",
+    "description": "无需注册。给自己取个昵称，我们会在这台设备上记录你的学习进度。",
+    "nickname": "昵称",
+    "placeholder": "例如：小棋手",
+    "start": "开始学习",
+    "required": "请输入 1～20 个字符的昵称"
+  },
+  "header": {
+    "product": "棋路",
+    "stage": "入门 · 实战学规则",
+    "language": "语言",
+    "flip": "翻转棋盘",
+    "help": "规则帮助",
+    "switchPlayer": "更换学习者"
+  },
+  "game": {
+    "yourTurn": "轮到你了",
+    "computerThinking": "电脑正在思考…",
+    "computerTurn": "电脑回合",
+    "opponent": "电脑对手",
+    "you": "你",
+    "beginnerOpponent": "入门陪练",
+    "engineFallback": "Stockfish 暂时无法启动，已切换到轻量启蒙引擎。",
+    "engineStockfish": "Stockfish 18 · 入门难度",
+    "engineStarter": "轻量启蒙引擎 · 入门难度",
+    "chooseEngine": "选择电脑引擎",
+    "playingWhite": "执白方",
+    "check": "将军！请保护你的王",
+    "checkmate": "将死，对局结束",
+    "draw": "和棋",
+    "white": "白方",
+    "black": "黑方",
+    "illegal": "这一步不符合规则，棋局没有改变。",
+    "notYourPiece": "请选择白方棋子。",
+    "notYourTurn": "现在是电脑回合，请稍等。",
+    "gameOver": "对局已经结束，请开始新棋局。",
+    "promotion": "兵要升变成什么？",
+    "lastMove": "上一步",
+    "newRule": "新规则学会了"
+  },
+  "coach": {
+    "title": "AI 教练",
+    "local": "基础教练",
+    "openai": "AI 增强",
+    "happened": "刚才发生了什么",
+    "intent": "我猜你可能在想",
+    "opponent": "电脑为什么这样走",
+    "observe": "下一步观察什么",
+    "empty": "走出第一步后，我会用短句陪你复盘。",
+    "more": "再解释一点",
+    "hint": "给我一个提示",
+    "hint2": "再具体一点",
+    "hint3": "显示推荐着法",
+    "fallback": "AI 讲解暂时不可用，已切换到基础教练模式。",
+    "thinking": "教练正在整理这个回合…"
+  },
+  "progress": {
+    "title": "你的进度",
+    "rules": "已学规则",
+    "games": "完成对局",
+    "moves": "合法走棋",
+    "mistakes": "常见错误",
+    "unit": "条"
+  },
+  "guide": {
+    "title": "先记住这一点",
+    "one": "白方从棋盘下方向上走，你执白棋。",
+    "two": "白方先走。点击或拖动棋子，再选择高亮的落点。",
+    "three": "兵通常向前走，但只能斜着吃子。先试试中央的兵。",
+    "next": "知道了"
+  },
+  "help": {
+    "title": "基础规则速查",
+    "orientation": "右下角应是浅色格。白方从下向上走。",
+    "pieces": "王走一格；后走直线或斜线；车走直线；象走斜线；马走 L 形且可以跳子；兵向前走、斜着吃。",
+    "check": "王被攻击就是将军，下一步必须解除。王不能走进被攻击的位置。",
+    "special": "兵到达底线会升变。王和车满足条件时可以王车易位。"
+  },
+  "reset": {
+    "title": "更换学习者？",
+    "description": "这会删除当前浏览器中的昵称、进度和未完成棋局，且无法恢复。"
+  },
+  "pieces": {
+    "king": "王",
+    "queen": "后",
+    "rook": "车",
+    "bishop": "象",
+    "knight": "马",
+    "pawn": "兵"
+  },
+  "rules": {
+    "board_orientation": "棋盘方向",
+    "board_coordinates": "棋盘坐标",
+    "white_moves_first": "白方先走",
+    "pawn_forward": "兵向前走",
+    "pawn_double_step": "兵首次走两格",
+    "pawn_diagonal_capture": "兵斜着吃子",
+    "knight_l_shape": "马走 L 形",
+    "knight_can_jump": "马可以跳子",
+    "bishop_diagonal": "象走斜线",
+    "rook_straight": "车走直线",
+    "queen_combined_movement": "后的走法",
+    "king_one_square": "王走一格",
+    "blocked_piece": "路线不能被阻挡",
+    "check": "将军",
+    "escape_check": "解除将军",
+    "checkmate": "将死",
+    "castling": "王车易位",
+    "promotion": "兵升变"
+  }
+}
