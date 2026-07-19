@@ -33,6 +33,25 @@ npm start
 
 构建产物位于 `out/`，可直接上传到 Nginx、GitHub Pages、Cloudflare Pages、对象存储或其他静态托管服务，不需要运行 Next.js 服务端。
 
+## GitHub Pages 部署
+
+仓库已经包含 `.github/workflows/deploy-pages.yml`。推送到 `main` 后，GitHub Actions 会以 `/ChessClass` 为站点路径构建、上传并发布 `out/`，网站地址为：
+
+```text
+https://john04047210.github.io/ChessClass/
+```
+
+首次使用时，在 GitHub 仓库进入 `Settings` → `Pages`，将 `Source` 设为 `GitHub Actions`。之后每次推送 `main` 都会自动部署，也可以在 `Actions` 页面手动运行 `Deploy GitHub Pages`。
+
+本地验证 GitHub Pages 子路径构建：
+
+```bash
+NEXT_PUBLIC_BASE_PATH=/ChessClass npm run build
+npm run test:e2e:pages
+```
+
+普通本地开发仍然直接执行 `npm run dev`，访问 `http://localhost:3000`，不带 `/ChessClass` 前缀。
+
 ## 可选教练网关
 
 默认无需任何环境变量，浏览器直接调用 `LocalCoachService`。如以后部署自己的 AI 教练网关，可在构建前设置：

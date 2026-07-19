@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:static": "playwright test --config=playwright.static.config.ts"
+    "test:e2e:static": "playwright test --config=playwright.static.config.ts",
+    "test:e2e:pages": "playwright test --config=playwright.pages.config.ts"
   },
   "dependencies": {
     "chess.js": "latest",
