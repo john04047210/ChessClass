@@ -72,6 +72,8 @@ npm run build:server
 
 把生成的 `out/` 同步到 Nginx 站点目录即可。GitHub Pages 和自有服务器共用源码，但必须使用各自的构建命令；每次构建会覆盖现有 `out/`。
 
+可直接复制的 Nginx 配置和证书前置条件见 [`deploy/nginx/README.md`](deploy/nginx/README.md)。
+
 ## 可选教练网关
 
 默认无需任何环境变量，浏览器直接调用 `LocalCoachService`。如以后部署自己的 AI 教练网关，可在构建前设置：

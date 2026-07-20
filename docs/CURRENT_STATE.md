@@ -53,6 +53,7 @@
 - 首次输入昵称的欢迎弹窗也提供语言选择，不创建玩家档案即可立即切换界面语言。
 - Next.js 静态导出，不需要 Node.js 应用服务器。
 - `npm run build:server` 生成根路径版本供 `chess9527.com`/Nginx 使用；`npm run build:pages` 生成 `/ChessClass` 版本供 GitHub Pages 使用，`npm run build` 默认指向服务器版本。
+- `deploy/nginx/chess9527.conf` 提供自有服务器生产配置：`.com` 为主域名，`.online`/`www` 跳转，支持静态路由、Stockfish WASM、缓存、安全响应头和地区日志字段。
 - GitHub Pages 已部署：`https://john04047210.github.io/ChessClass/`。
 - GitHub Actions 使用 Node.js 24；当前工作流只允许手动触发发布，普通 `push` 不会自动部署。
 - 普通构建约 8.5 MB，其中 Stockfish Lite WASM 约 7 MB。

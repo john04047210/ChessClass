@@ -1,14 +1,36 @@
-out/
+# Dependencies and generated output
 node_modules/
 .next/
 out/
+coverage/
+.cache/
+.turbo/
+
+# Test artifacts
 playwright-report/
 test-results/
-coverage/
-.env
-.env.local
-.env.*.local
+blob-report/
+
+# Local environment, deployment settings, and secrets
+.env*
 !.env.example
+*.local.sh
+*.key
+*.pem
+*.p12
+*.pfx
+deploy/private/
+secrets/
+
+# Logs and compiler caches
 *.log
 *.tsbuildinfo
+
+# Editor and operating-system files
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
