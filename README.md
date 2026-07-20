@@ -33,33 +33,44 @@ npm install
 npm run dev
 ```
 
-访问 `http://localhost:3000`。静态生产构建与本地预览：
+访问 `http://localhost:3000`。自有服务器根路径构建与本地预览：
 
 ```bash
 npm run build
-npm start
+npm run preview:server
 ```
 
-构建产物位于 `out/`，可直接上传到 Nginx、GitHub Pages、Cloudflare Pages、对象存储或其他静态托管服务，不需要运行 Next.js 服务端。
+`npm run build` 默认等同于 `npm run build:server`，构建产物位于 `out/`，可直接上传到 Nginx、对象存储或其他根路径静态托管服务，不需要运行 Next.js 服务端。
 
 ## GitHub Pages 部署
 
-仓库已经包含 `.github/workflows/deploy-pages.yml`。推送到 `main` 后，GitHub Actions 会以 `/ChessClass` 为站点路径构建、上传并发布 `out/`，网站地址为：
+仓库已经包含 `.github/workflows/deploy-pages.yml`。在 GitHub Actions 手动运行 `Deploy GitHub Pages` 后，工作流会调用 `npm run build:pages`，以 `/ChessClass` 为站点路径构建、上传并发布 `out/`，网站地址为：
 
 ```text
 https://john04047210.github.io/ChessClass/
 ```
 
-首次使用时，在 GitHub 仓库进入 `Settings` → `Pages`，将 `Source` 设为 `GitHub Actions`。之后每次推送 `main` 都会自动部署，也可以在 `Actions` 页面手动运行 `Deploy GitHub Pages`。
+首次使用时，在 GitHub 仓库进入 `Settings` → `Pages`，将 `Source` 设为 `GitHub Actions`。普通 push 不会部署，需要在 `Actions` 页面手动运行 `Deploy GitHub Pages`。
 
 本地验证 GitHub Pages 子路径构建：
 
 ```bash
-NEXT_PUBLIC_BASE_PATH=/ChessClass npm run build
+npm run build:pages
 npm run test:e2e:pages
 ```
 
-普通本地开发仍然直接执行 `npm run dev`，访问 `http://localhost:3000`，不带 `/ChessClass` 前缀。
+`npm run test:e2e:pages` 会先重新生成 Pages 构建；自有服务器完整测试使用 `npm run test:e2e:server`。普通本地开发仍执行 `npm run dev`，不带 `/ChessClass` 前缀。
+
+## 自有服务器部署
+
+`chess9527.com` 等根域名使用根路径构建：
+
+```bash
+npm ci
+npm run build:server
+```
+
+把生成的 `out/` 同步到 Nginx 站点目录即可。GitHub Pages 和自有服务器共用源码，但必须使用各自的构建命令；每次构建会覆盖现有 `out/`。
 
 ## 可选教练网关
 
@@ -86,7 +97,8 @@ npm run lint
 npm run typecheck
 npm test
 npm run test:e2e
-npm run build
+npm run test:e2e:server
+npm run test:e2e:pages
 ```
 
 Playwright 首次运行如缺少浏览器，可执行 `npx playwright install chromium`。

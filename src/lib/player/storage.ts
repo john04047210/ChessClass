@@ -1,15 +1,18 @@
-import type { PlayerProfile, SupportedLocale } from "@/lib/types";
+import type { PlayerGender, PlayerProfile, SupportedLocale } from "@/lib/types";
 import { createUuid } from "@/lib/id";
 
 export const PROFILE_KEY = "chess-coach-player-v1";
 
-export function createProfile(nickname: string, locale: SupportedLocale): PlayerProfile {
+export function createProfile(nickname: string, locale: SupportedLocale, gender:PlayerGender="undisclosed"): PlayerProfile {
   const now = new Date().toISOString();
   return {
     playerId: createUuid(),
     nickname: nickname.trim().slice(0, 20),
     preferredLocale: locale,
     opponentEngine: "stockfish",
+    coachMode: "local",
+    gender,
+    avatarId: gender==="male"?"male":gender==="female"?"female":"neutral",
     createdAt: now,
     updatedAt: now,
     lessonProgress: {
@@ -26,7 +29,18 @@ export function loadProfile(): PlayerProfile | null {
     const value = localStorage.getItem(PROFILE_KEY);
     if (!value) return null;
     const profile = JSON.parse(value) as PlayerProfile;
-    return profile.playerId && profile.nickname ? profile : null;
+    if (!profile.playerId || !profile.nickname) return null;
+    return {
+      ...profile,
+      opponentEngine: profile.opponentEngine ?? "stockfish",
+      coachMode: profile.coachMode ?? "local",
+      gender: profile.gender ?? "undisclosed",
+      avatarId: profile.avatarId === "male" || profile.avatarId === "female" || profile.avatarId === "neutral" ? profile.avatarId : "neutral",
+      currentGame: profile.currentGame ? {
+        ...profile.currentGame,
+        conversationMessages: profile.currentGame.conversationMessages ?? [],
+      } : undefined,
+    };
   } catch { return null; }
 }
 

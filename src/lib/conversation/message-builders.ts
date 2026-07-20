@@ -1,0 +1,8 @@
+import {getMessages} from "@/lib/i18n/messages";
+import {createUuid} from "@/lib/id";
+import type {ConversationMessage,EngineAnalysisSnapshot,MoveRecord,SupportedLocale} from "@/lib/types";
+
+export function moveSentence(locale:SupportedLocale,role:"player"|"opponent",move:MoveRecord){const m=getMessages(locale),piece=m.pieces[move.piece],captured=move.captured?m.pieces[move.captured]:"",actor=role==="player"?(locale==="zh-CN"?"你":locale==="ja"?"あなた":"You"):(locale==="zh-CN"?"对手":locale==="ja"?"相手":"The opponent");if(locale==="zh-CN")return`${actor}把${piece}从 ${move.from} 走到 ${move.to}（${move.san}）${captured?`，并吃掉了${role==="player"?"对手的":"你的"}${captured}`:""}。`;if(locale==="ja")return`${actor}は${piece}を ${move.from} から ${move.to} へ動かしました（${move.san}）${captured?`。そして${role==="player"?"相手":"あなた"}の${captured}を取りました`:""}。`;return`${actor} moved the ${piece} from ${move.from} to ${move.to} (${move.san})${captured?`, capturing ${role==="player"?"the opponent's":"your"} ${captured}`:""}.`;}
+export function newMessage(input:Omit<ConversationMessage,"id"|"createdAt">):ConversationMessage{return{...input,id:createUuid(),createdAt:new Date().toISOString()};}
+export function thinkingText(locale:SupportedLocale){return locale==="zh-CN"?"我正在分析你的走法……":locale==="ja"?"あなたの手を分析しています……":"I’m analyzing your move…";}
+export function analysisText(locale:SupportedLocale,analysis:EngineAnalysisSnapshot){const candidate=analysis.candidates[0];const move=candidate?.moveSan||candidate?.moveUci;return locale==="zh-CN"?`我正在重点分析 ${move||"当前主要应对"}。`:locale==="ja"?`${move||"主な応手"} を中心に分析しています。`:`I’m focusing on ${move||"the main reply"}.`;}

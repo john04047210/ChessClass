@@ -20,7 +20,7 @@
     "nickname": "ニックネーム",
     "placeholder": "例：ルーキー",
     "start": "学習を始める",
-    "required": "1〜20文字のニックネームを入力してください"
+    "required": "1〜20文字のニックネームを入力してください", "gender": "アバターのスタイル", "male": "男性", "female": "女性", "undisclosed": "回答しない"
   },
   "header": {
     "product": "Kiro",
@@ -67,9 +67,14 @@
     "more": "もう少し説明",
     "hint": "ヒントをください",
     "hint2": "もう少し具体的に",
-    "hint3": "おすすめの手を表示",
+    "hint3": "おすすめの手",
     "fallback": "AI解説が利用できないため、基本コーチに切り替えました。",
     "thinking": "このターンを振り返っています…"
+  },
+  "conversation": {
+    "title": "対話", "me": "私", "opponent": "相手", "coach": "コーチ", "system": "システム",
+    "coachMode": "コーチモード", "localCoach": "基本コーチ", "coachOff": "コーチなし", "empty": "最初の一手を指すと、ここで相手と一緒に振り返ります。",
+    "analyzing": "相手が分析中", "showDetails": "エンジン詳細を表示", "hideDetails": "エンジン詳細を隠す", "depth": "探索深度", "score": "局面評価", "mainLine": "主要変化", "whatShouldIDo": "どうすればいい？"
   },
   "progress": {
     "title": "進み具合",

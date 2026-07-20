@@ -12,6 +12,23 @@ export type RuleKey =
 
 export type RequestedDetail = "default" | "more" | "hint_1" | "hint_2" | "hint_3";
 export type CoachProvider = "openai" | "local_fallback";
+export type CoachMode = "disabled" | "local" | "remote_gateway";
+export type PlayerGender = "male" | "female" | "undisclosed";
+export type ConversationRole = "player" | "opponent" | "coach" | "system";
+export type ConversationMessageType = "player_move" | "opponent_thinking" | "opponent_analysis" | "opponent_decision" | "coach_comment" | "coach_advice" | "player_question" | "rule_explanation" | "system_notice" | "error";
+export type ConversationMessageStatus = "pending" | "streaming" | "complete" | "cancelled" | "error";
+
+export type EngineScore = { type:"centipawn"; value:number; perspective:"white" } | { type:"mate"; value:number; perspective:"white" };
+export interface EngineCandidate { rank:number; moveUci:string; moveSan?:string; score:EngineScore; principalVariationUci:string[]; principalVariationSan?:string[]; }
+export interface EngineAnalysisSnapshot { searchId:string; depth:number; selDepth?:number; nodes?:number; nps?:number; elapsedMs?:number; candidates:EngineCandidate[]; }
+export interface EngineSearchResult { bestMove:Pick<LegalMove,"from"|"to"|"promotion">; ponder?:string; finalAnalysis?:EngineAnalysisSnapshot; }
+
+export interface ConversationMessage {
+  id:string; sequence:number; gameId:string; turnId:string; role:ConversationRole; type:ConversationMessageType;
+  locale:SupportedLocale; status:ConversationMessageStatus; createdAt:string; text:string;
+  move?:MoveRecord & {color:"white"|"black"}; engineAnalysis?:EngineAnalysisSnapshot;
+  metadata?:{provider?:"local"|"remote_gateway"; suggestionId?:string; withdrawn?:boolean};
+}
 
 export interface LegalMove {
   from: string;
@@ -42,6 +59,7 @@ export interface CoachRequest {
   opponentMove?: MoveRecord;
   legalMovesBeforeUserMove: string[];
   legalMovesAfterOpponentMove?: string[];
+  recommendedMove?: MoveRecord;
   requestedDetail: RequestedDetail;
 }
 
@@ -78,6 +96,7 @@ export interface GameHistoryNode {
   turnId: string;
   lastMove?: { from: string; to: string };
   lastCoach?: CoachSnapshot;
+  conversationMessageCount?: number;
 }
 
 export interface GameTimeline {
@@ -90,6 +109,9 @@ export interface PlayerProfile {
   nickname: string;
   preferredLocale: SupportedLocale;
   opponentEngine?: "stockfish" | "starter";
+  coachMode?: CoachMode;
+  gender?: PlayerGender;
+  avatarId?: "male" | "female" | "neutral";
   createdAt: string;
   updatedAt: string;
   lessonProgress: {
@@ -108,6 +130,7 @@ export interface PlayerProfile {
     turnId: string;
     lastCoach?: CoachSnapshot;
     timeline?: GameTimeline;
+    conversationMessages?: ConversationMessage[];
   };
   coachMessages?: Array<{
     id: string; gameId: string; turnId: string; locale: SupportedLocale;

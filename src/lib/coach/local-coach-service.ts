@@ -2,6 +2,7 @@ import { Chess } from "chess.js";
 import { getMessages } from "@/lib/i18n/messages";
 import type { CoachRequest, CoachResponse, PieceType, RuleKey, SupportedLocale } from "@/lib/types";
 import type { CoachService } from "./coach-service";
+import { explainOpponentMove } from "./position-explanation";
 
 function expandedNotation(locale: SupportedLocale, move: CoachRequest["userMove"]): string {
   const messages = getMessages(locale);
@@ -36,7 +37,7 @@ const copy = {
     opponent: (san: string) => `电脑走了 ${san}，它在发展棋子、争夺空间，或回应你刚才的威胁。`,
     observe: "先看看中央四格，再找一找还没有走出的马和象。",
     hint2: "看看你的马和象：哪两三个棋子能安全走出，同时照顾中央？",
-    hint3: (m: string) => `可以考虑 ${m}。它是合法着法，也能帮助你改善棋子位置。`,
+    hint3: (m: string) => `推荐走法：${m}。这是本地棋力引擎分析当前局面后给出的首选合法走法；你可以先找出它对应的棋子和目标格，再决定是否采用。`,
     more: "走棋前可以问自己三件事：我的王安全吗？对方在攻击什么？这个棋子走后会不会失去保护？",
   },
   en: {
@@ -46,7 +47,7 @@ const copy = {
     opponent: (san: string) => `The computer played ${san} to develop, contest space, or answer your last move.`,
     observe: "Look at the four central squares, then find a knight or bishop that has not moved yet.",
     hint2: "Look at your knights and bishops: which two or three can develop safely while helping the center?",
-    hint3: (m: string) => `Consider ${m}. It is legal and can improve your piece placement.`,
+    hint3: (m: string) => `Recommended move: ${m}. This is the local chess engine's top legal choice for the current position; first identify the piece and destination, then decide whether to play it.`,
     more: "Before moving, ask: Is my king safe? What is my opponent attacking? Will the piece still be protected?",
   },
   ja: {
@@ -56,7 +57,7 @@ const copy = {
     opponent: (san: string) => `コンピューターは ${san}。駒の展開、スペース争い、または直前の手への対応です。`,
     observe: "中央の4マスを見てから、まだ動いていないナイトやビショップを探しましょう。",
     hint2: "ナイトとビショップのうち、安全に展開して中央を助けられる2〜3個を探しましょう。",
-    hint3: (m: string) => `${m} を考えてみましょう。合法手で、駒の位置を改善できます。`,
+    hint3: (m: string) => `おすすめの手：${m}。現在の局面をローカル棋力エンジンで解析した最上位の合法手です。駒と目的地を確認してから、指すかどうか決めましょう。`,
     more: "指す前に、キングは安全か、相手は何を攻撃しているか、動かす駒の守りが残るかを確認しましょう。",
   },
 } as const;
@@ -97,10 +98,12 @@ export class LocalCoachService implements CoachService {
     let nextObservation: string = c.observe;
     if (input.requestedDetail === "more") nextObservation = c.more;
     if (input.requestedDetail === "hint_2") nextObservation = c.hint2;
-    if (input.requestedDetail === "hint_3" && legal) nextObservation = c.hint3(legal);
+    if (input.requestedDetail === "hint_3" && legal) nextObservation = c.hint3(input.recommendedMove ? expandedNotation(input.locale,input.recommendedMove) : legal);
     const piece = messages.pieces[input.userMove.piece];
     const captured = input.userMove.captured ? c.captured(messages.pieces[input.userMove.captured]) : "";
-    const opponent = input.opponentMove ? c.opponent(expandedNotation(input.locale, input.opponentMove)) : (input.game.status === "checkmate" ? messages.game.checkmate : "");
+    const positionExplanation = input.opponentMove && input.game.fenAfterOpponentMove ? explainOpponentMove(input.locale,input.game.fenAfterUserMove,input.game.fenAfterOpponentMove,input.opponentMove) : undefined;
+    const opponent = input.opponentMove ? positionExplanation?.explanation || c.opponent(expandedNotation(input.locale, input.opponentMove)) : (input.game.status === "checkmate" ? messages.game.checkmate : "");
+    if(input.requestedDetail==="default"&&positionExplanation)nextObservation=positionExplanation.observation;
     return {
       provider: "local_fallback", locale: input.locale, gameId: input.gameId, turnId: input.turnId,
       userMoveSummary: `${c.moved(piece, input.userMove.from, input.userMove.to)}${captured}`,

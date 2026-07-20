@@ -20,7 +20,7 @@
     "nickname": "昵称",
     "placeholder": "例如：小棋手",
     "start": "开始学习",
-    "required": "请输入 1～20 个字符的昵称"
+    "required": "请输入 1～20 个字符的昵称", "gender": "头像风格", "male": "男生", "female": "女生", "undisclosed": "不告诉"
   },
   "header": {
     "product": "棋路",
@@ -67,9 +67,14 @@
     "more": "再解释一点",
     "hint": "给我一个提示",
     "hint2": "再具体一点",
-    "hint3": "显示推荐着法",
+    "hint3": "推荐走法",
     "fallback": "AI 讲解暂时不可用，已切换到基础教练模式。",
     "thinking": "教练正在整理这个回合…"
+  },
+  "conversation": {
+    "title": "对话", "me": "我", "opponent": "对手", "coach": "教练", "system": "系统",
+    "coachMode": "教练模式", "localCoach": "基础教练", "coachOff": "教练关闭", "empty": "走出第一步后，我和对手会在这里陪你复盘。",
+    "analyzing": "对手正在分析", "showDetails": "查看引擎详情", "hideDetails": "隐藏引擎详情", "depth": "搜索深度", "score": "局面评分", "mainLine": "主要变化", "whatShouldIDo": "我该怎么办？"
   },
   "progress": {
     "title": "你的进度",

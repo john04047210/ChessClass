@@ -14,7 +14,7 @@
 
 - Node.js 版本为 24 或更高。
 - Next.js 保持 `output: "export"`，默认构建产物为 `out/`。
-- GitHub Pages 使用 `/ChessClass` base path；普通本地开发不使用该前缀。
+- `npm run build:server` 为自有服务器生成根路径静态站点；`npm run build:pages` 为 GitHub Pages 生成 `/ChessClass` 站点。普通本地开发不使用前缀。
 - `chess.js` 是合法走法和棋局状态的规则边界。
 - Stockfish 18 Lite 单线程 WASM 是默认电脑引擎；`BeginnerOpponentEngine` 必须保留为玩家可选引擎和故障降级方案。
 - Stockfish 在 Web Worker 中运行。不要把耗时计算移回 UI 主线程。
@@ -50,7 +50,6 @@ npm run test:e2e:static
 涉及 GitHub Pages、资源地址、路由前缀或 Stockfish WASM 时使用 Pages 构建并测试：
 
 ```bash
-NEXT_PUBLIC_BASE_PATH=/ChessClass npm run build
 npm run test:e2e:pages
 ```
 
@@ -58,7 +57,7 @@ npm run test:e2e:pages
 
 ## Git 与发布
 
-- 稳定分支为 `main`，GitHub Pages 在推送 `main` 后自动构建和部署。
+- 稳定分支为 `main`，GitHub Pages 只通过手动运行 `Deploy GitHub Pages` workflow 构建和部署。
 - 大型功能建议使用 `feature/<name>` 分支，完成验收后再合并 `main`。
 - 在线地址：`https://john04047210.github.io/ChessClass/`。
 - 不强推、不改写共享历史、不提交秘密，不自动执行破坏性 Git 操作。

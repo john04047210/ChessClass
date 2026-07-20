@@ -7,12 +7,16 @@ import { BeginnerOpponentEngine } from "@/lib/chess/beginner-opponent-engine";
 import { legalMoves, statusOf, toMoveRecord } from "@/lib/chess/game-controller";
 import { StockfishOpponentEngine } from "@/lib/chess/stockfish-opponent-engine";
 import { LocalCoachService, ruleForMove } from "@/lib/coach/local-coach-service";
+import { analysisText, moveSentence, newMessage, thinkingText } from "@/lib/conversation/message-builders";
 import type { Messages } from "@/lib/i18n/messages";
 import { createUuid } from "@/lib/id";
 import { clearProfile, createProfile, loadProfile, saveProfile } from "@/lib/player/storage";
-import type { CoachRequest, CoachResponse, GameHistoryNode, PlayerProfile, PromotionPiece, RequestedDetail, SupportedLocale } from "@/lib/types";
+import type { CoachMode, CoachRequest, CoachResponse, ConversationMessage, EngineAnalysisSnapshot, GameHistoryNode, PlayerGender, PlayerProfile, PromotionPiece, RequestedDetail, SupportedLocale } from "@/lib/types";
 import { ChessBoard } from "./ChessBoard";
-import { CoachPanel } from "./CoachPanel";
+import { Avatar } from "./Avatar";
+import { LearningReferenceDialog } from "./LearningReferenceDialog";
+import { referenceContent } from "@/lib/learning/reference-content";
+import { ConversationPanel } from "./conversation/ConversationPanel";
 import { WelcomeDialog } from "./WelcomeDialog";
 
 const TIMELINE_LIMIT = 101;
@@ -20,8 +24,8 @@ const TIMELINE_LIMIT = 101;
 function newGame(profile: PlayerProfile): PlayerProfile {
   const gameId = createUuid();
   const chess = new Chess(); const turnId = createUuid();
-  const firstNode: GameHistoryNode = { fen:chess.fen(), pgn:"", turnId };
-  return { ...profile, currentGame: { gameId, fen:chess.fen(), pgn:"", startedAt:new Date().toISOString(), turnId, timeline:{nodes:[firstNode],cursor:0} } };
+  const firstNode: GameHistoryNode = { fen:chess.fen(), pgn:"", turnId, conversationMessageCount:0 };
+  return { ...profile, currentGame: { gameId, fen:chess.fen(), pgn:"", startedAt:new Date().toISOString(), turnId, conversationMessages:[], timeline:{nodes:[firstNode],cursor:0} } };
 }
 
 function gameFrom(profile: PlayerProfile): Chess {
@@ -30,18 +34,22 @@ function gameFrom(profile: PlayerProfile): Chess {
   if (pgn) { try { chess.loadPgn(pgn); return chess; } catch { /* use FEN */ } }
   try { return new Chess(profile.currentGame?.fen); } catch { return new Chess(); }
 }
+function visibleConversation(profile:PlayerProfile){const game=profile.currentGame,all=game?.conversationMessages||[];const timeline=game?.timeline;if(!timeline)return all;return all.slice(0,timeline.nodes[timeline.cursor]?.conversationMessageCount??all.length);}
+function latestAnalysis(items:ConversationMessage[]){return [...items].reverse().find(item=>item.engineAnalysis)?.engineAnalysis||null;}
+function refreshMoveMessages(profile:PlayerProfile,locale:SupportedLocale):PlayerProfile{const game=profile.currentGame;if(!game?.conversationMessages)return profile;return{...profile,currentGame:{...game,conversationMessages:game.conversationMessages.map(item=>item.move&&(item.role==="player"||item.role==="opponent")?{...item,locale,text:moveSentence(locale,item.role,item.move)}:item)}};}
 
 function withTimeline(profile: PlayerProfile): PlayerProfile {
   const currentGame = profile.currentGame;
   if (!currentGame || currentGame.timeline?.nodes.length) return profile;
   const source = gameFrom(profile); const moves = source.history({ verbose:true }); const replay = new Chess();
-  const nodes: GameHistoryNode[] = [{ fen:replay.fen(), pgn:"", turnId:createUuid() }];
+  const messageCount=currentGame.conversationMessages?.length??0;
+  const nodes: GameHistoryNode[] = [{ fen:replay.fen(), pgn:"", turnId:createUuid(), conversationMessageCount:0 }];
   for (const move of moves) {
     const applied = replay.move({from:move.from,to:move.to,promotion:move.promotion});
-    if (replay.turn() === "w" || replay.isGameOver()) nodes.push({fen:replay.fen(),pgn:replay.pgn(),turnId:createUuid(),lastMove:{from:applied.from,to:applied.to}});
+    if (replay.turn() === "w" || replay.isGameOver()) nodes.push({fen:replay.fen(),pgn:replay.pgn(),turnId:createUuid(),lastMove:{from:applied.from,to:applied.to},conversationMessageCount:messageCount});
   }
   if (nodes.at(-1)?.fen !== currentGame.fen) nodes.push({fen:currentGame.fen,pgn:currentGame.pgn,turnId:currentGame.turnId,lastMove:moves.length?{from:moves.at(-1)!.from,to:moves.at(-1)!.to}:undefined});
-  const retained = nodes.slice(-TIMELINE_LIMIT); retained[retained.length-1] = {...retained[retained.length-1],turnId:currentGame.turnId,lastCoach:currentGame.lastCoach};
+  const retained = nodes.slice(-TIMELINE_LIMIT); retained[retained.length-1] = {...retained[retained.length-1],turnId:currentGame.turnId,lastCoach:currentGame.lastCoach,conversationMessageCount:messageCount};
   return {...profile,currentGame:{...currentGame,timeline:{nodes:retained,cursor:retained.length-1}}};
 }
 
@@ -57,10 +65,13 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
   const [thinking, setThinking] = useState(false);
   const [opponentEngine, setOpponentEngine] = useState<"stockfish" | "starter">("stockfish");
   const [coachLoading, setCoachLoading] = useState(false);
-  const [coach, setCoach] = useState<CoachResponse | null>(null);
+  const [canAskCoach, setCanAskCoach] = useState(false);
+  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
+  const [transientMessage, setTransientMessage] = useState<ConversationMessage | null>(null);
+  const [engineAnalysis, setEngineAnalysis] = useState<EngineAnalysisSnapshot | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [guide, setGuide] = useState(0);
-  const [help, setHelp] = useState(false);
+  const [referenceTab, setReferenceTab] = useState<"rules"|"tips"|null>(null);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [promotion, setPromotion] = useState<{from:string;to:string} | null>(null);
   const [opponentPreview, setOpponentPreview] = useState<{from:string;to:string;phase:"preparing"|"landed"} | null>(null);
@@ -77,18 +88,25 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
       loaded = { ...loaded, preferredLocale: locale };
       if (!loaded.currentGame) loaded = newGame(loaded);
       loaded = withTimeline(loaded);
+      loaded = refreshMoveMessages(loaded,locale);
       const restoredCoach = loaded.currentGame?.lastCoach;
       profileRef.current = loaded;
       // Hydration must wait for the browser-only localStorage source.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setProfile(loaded); setFen(gameFrom(loaded).fen()); setCoach(restoredCoach?.response || null); requestRef.current = restoredCoach?.request || null; saveProfile(loaded);
+      const visible=visibleConversation(loaded);setProfile(loaded); setFen(gameFrom(loaded).fen()); setConversation(visible); setEngineAnalysis(latestAnalysis(visible)); requestRef.current = restoredCoach?.request || null; setCanAskCoach(Boolean(restoredCoach?.request)); saveProfile(loaded);
     }
     setReady(true);
     return () => { abortRef.current?.abort(); stockfish.dispose(); };
   }, [locale, stockfish]);
 
-  function start(nickname: string) {
-    const next = newGame(createProfile(nickname, locale)); commitProfile(next); setFen(next.currentGame!.fen);
+  function start(nickname: string,gender:PlayerGender) {
+    const next = newGame(createProfile(nickname, locale,gender)); commitProfile(next); setFen(next.currentGame!.fen); setConversation([]);
+  }
+
+  function appendConversation(message: ConversationMessage) {
+    const current=profileRef.current;if(!current?.currentGame)return;
+    const items=[...(current.currentGame.conversationMessages||[]),message].slice(-300);
+    commitProfile({...current,currentGame:{...current.currentGame,conversationMessages:items}});setConversation(items);
   }
 
   function updateGame(chess: Chess, turnId: string, extra?: Partial<PlayerProfile["lessonProgress"]>) {
@@ -100,15 +118,16 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
   function beginNewTimelineBranch() {
     const current = profileRef.current; const currentGame = current?.currentGame; const timeline = currentGame?.timeline;
     if (!current || !currentGame || !timeline) return;
-    const nodes = timeline.nodes.slice(0, timeline.cursor + 1);
-    commitProfile({...current,currentGame:{...currentGame,lastCoach:undefined,timeline:{nodes,cursor:nodes.length-1}}});
-    requestRef.current = null; setCoach(null);
+    const nodes = timeline.nodes.slice(0, timeline.cursor + 1); const count=nodes.at(-1)?.conversationMessageCount??0;
+    const stored=(currentGame.conversationMessages||[]).slice(0,count);
+    commitProfile({...current,currentGame:{...currentGame,lastCoach:undefined,conversationMessages:stored,timeline:{nodes,cursor:nodes.length-1}}}); setConversation(stored);
+    requestRef.current = null; setCanAskCoach(false);
   }
 
   function appendTimelineNode(chess: Chess, turnId: string, move?: Move) {
     const current = profileRef.current; const currentGame = current?.currentGame; const timeline = currentGame?.timeline;
     if (!current || !currentGame || !timeline) return;
-    const node: GameHistoryNode = {fen:chess.fen(),pgn:chess.pgn(),turnId,lastMove:move?{from:move.from,to:move.to}:undefined};
+    const node: GameHistoryNode = {fen:chess.fen(),pgn:chess.pgn(),turnId,lastMove:move?{from:move.from,to:move.to}:undefined,conversationMessageCount:currentGame.conversationMessages?.length??0};
     const appended = [...timeline.nodes.slice(0,timeline.cursor+1),node].slice(-TIMELINE_LIMIT);
     commitProfile({...current,currentGame:{...currentGame,fen:node.fen,pgn:node.pgn,turnId,timeline:{nodes:appended,cursor:appended.length-1}}});
   }
@@ -117,9 +136,9 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
     const current = profileRef.current; const currentGame = current?.currentGame; const timeline = currentGame?.timeline;
     if (!current || !currentGame || !timeline || thinking) return;
     const cursor = timeline.cursor + direction; const node = timeline.nodes[cursor]; if (!node) return;
-    abortRef.current?.abort();
+    abortRef.current?.abort(); stockfish.cancelSearch(); setTransientMessage(null); setEngineAnalysis(null);
     const nextGame = {...currentGame,fen:node.fen,pgn:node.pgn,turnId:node.turnId,lastCoach:node.lastCoach,timeline:{...timeline,cursor}};
-    commitProfile({...current,currentGame:nextGame}); setFen(node.fen); setLastMove(node.lastMove); setCoach(node.lastCoach?.response || null); requestRef.current=node.lastCoach?.request || null;
+    const visible=(currentGame.conversationMessages||[]).slice(0,node.conversationMessageCount??0);commitProfile({...current,currentGame:nextGame}); setFen(node.fen); setLastMove(node.lastMove); setConversation(visible);setEngineAnalysis(latestAnalysis(visible)); requestRef.current=node.lastCoach?.request || null; setCanAskCoach(Boolean(node.lastCoach?.request));
     setSelected(null); setTargets([]); setOpponentPreview(null); setNotice(null); setCoachLoading(false);
   }
 
@@ -165,16 +184,20 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
     const learned = current.lessonProgress.learnedRules.includes(rule) ? current.lessonProgress.learnedRules : [...current.lessonProgress.learnedRules, rule];
     const seen = current.lessonProgress.seenRules.includes(rule) ? current.lessonProgress.seenRules : [...current.lessonProgress.seenRules, rule];
     updateGame(chess, turnId, { legalMovesMade: current.lessonProgress.legalMovesMade + 1, learnedRules: learned, seenRules: seen });
+    appendConversation(newMessage({sequence:(profileRef.current?.currentGame?.conversationMessages?.length||0)+1,gameId:activeGameId,turnId,role:"player",type:"player_move",locale,status:"complete",text:moveSentence(locale,"player",toMoveRecord(userMove)),move:{...toMoveRecord(userMove),color:"white"}}));
+    setTransientMessage(newMessage({sequence:(profileRef.current?.currentGame?.conversationMessages?.length||0)+1,gameId:activeGameId,turnId,role:"opponent",type:"opponent_thinking",locale,status:"streaming",text:thinkingText(locale)}));
 
     await new Promise((resolve) => window.setTimeout(resolve, 420));
     if (profileRef.current?.currentGame?.gameId !== activeGameId) return;
     let opponentMove: Move | undefined;
+    let moveAnalysis: EngineAnalysisSnapshot | undefined;
     if (!chess.isGameOver()) {
       const choices = legalMoves(chess);
       let choice;
       try {
         if ((current.opponentEngine ?? "stockfish") === "starter") throw new Error("Starter engine selected");
-        choice = await stockfish.chooseMove({ fen: chess.fen(), legalMoves: choices, level: "beginner" });
+        const result = await stockfish.searchMove({ fen: chess.fen(), legalMoves: choices, level: "beginner", multiPv:3, onAnalysis:snapshot=>{setEngineAnalysis(snapshot);setTransientMessage(newMessage({sequence:(profileRef.current?.currentGame?.conversationMessages?.length||0)+1,gameId:activeGameId,turnId,role:"opponent",type:"opponent_analysis",locale,status:"streaming",text:analysisText(locale,snapshot),engineAnalysis:snapshot}));} });
+        choice = result?.bestMove; if(result?.finalAnalysis){moveAnalysis=result.finalAnalysis;setEngineAnalysis(result.finalAnalysis);}
         setOpponentEngine("stockfish");
       } catch {
         const fallback = new BeginnerOpponentEngine(chess.moveNumber() * 7919 + current.lessonProgress.legalMovesMade);
@@ -188,6 +211,7 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
         if (profileRef.current?.currentGame?.gameId !== activeGameId) return;
         opponentMove = chess.move(choice); setLastMove({from:opponentMove.from,to:opponentMove.to});
         setOpponentPreview({from:opponentMove.from,to:opponentMove.to,phase:"landed"});
+        setTransientMessage(null); appendConversation(newMessage({sequence:(profileRef.current?.currentGame?.conversationMessages?.length||0)+1,gameId:activeGameId,turnId,role:"opponent",type:"opponent_decision",locale,status:"complete",text:moveSentence(locale,"opponent",toMoveRecord(opponentMove)),move:{...toMoveRecord(opponentMove),color:"black"},engineAnalysis:moveAnalysis}));
       }
     }
     const latest = profileRef.current!;
@@ -200,7 +224,7 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
     appendTimelineNode(chess,turnId,opponentMove || userMove);
     if (opponentMove) await new Promise((resolve) => window.setTimeout(resolve, 650));
     if (profileRef.current?.currentGame?.gameId !== activeGameId) return;
-    setOpponentPreview(null); setThinking(false);
+    setOpponentPreview(null); setTransientMessage(null); setThinking(false);
     const coachedProfile = profileRef.current!;
     const request: CoachRequest = {
       locale, gameId: coachedProfile.currentGame!.gameId, turnId,
@@ -209,19 +233,22 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
       userMove: toMoveRecord(userMove), opponentMove: opponentMove ? toMoveRecord(opponentMove) : undefined,
       legalMovesBeforeUserMove: legalBefore, legalMovesAfterOpponentMove: chess.isGameOver() ? [] : chess.moves(), requestedDetail: "default",
     };
-    requestRef.current = request; await fetchCoach(request);
+    requestRef.current = request; setCanAskCoach(true); await fetchCoach(request);
   }
 
   function acceptCoachResult(request: CoachRequest, result: CoachResponse) {
     const latest = profileRef.current;
     if (latest?.currentGame?.gameId !== result.gameId || latest.currentGame.turnId !== result.turnId) return;
-    setCoach(result);
-    const timeline = latest.currentGame.timeline;
+    if ((latest.coachMode??"local")!=="disabled") appendConversation(newMessage({sequence:(profileRef.current?.currentGame?.conversationMessages?.length||0)+1,gameId:result.gameId,turnId:result.turnId,role:"coach",type:request.requestedDetail==="default"?"coach_comment":"coach_advice",locale,status:"complete",text:request.requestedDetail==="default"?`${result.opponentMoveExplanation} ${result.nextObservation}`:result.nextObservation,metadata:{provider:result.provider==="openai"?"remote_gateway":"local"}}));
+    const refreshed=profileRef.current;if(!refreshed?.currentGame)return;
+    const timeline = refreshed.currentGame.timeline;
     const nodes = timeline ? timeline.nodes.map((node,index) => index === timeline.cursor ? {...node,lastCoach:{request,response:result}} : node) : undefined;
-    commitProfile({ ...latest, currentGame:{ ...latest.currentGame, lastCoach:{ request, response:result }, timeline:timeline && nodes ? {...timeline,nodes} : timeline } });
+    const counted=nodes?.map((node,index)=>index===timeline!.cursor?{...node,conversationMessageCount:refreshed.currentGame!.conversationMessages?.length??0}:node);
+    commitProfile({ ...refreshed, currentGame:{ ...refreshed.currentGame, lastCoach:{ request, response:result }, timeline:timeline && counted ? {...timeline,nodes:counted} : timeline } });
   }
 
   async function fetchCoach(request: CoachRequest) {
+    if ((profileRef.current?.coachMode??"local")==="disabled") return;
     abortRef.current?.abort(); const controller = new AbortController(); abortRef.current = controller; setCoachLoading(true);
     try {
       const gatewayUrl = process.env.NEXT_PUBLIC_COACH_API_URL?.trim(); let result: CoachResponse;
@@ -238,10 +265,35 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
     finally { if (abortRef.current === controller) setCoachLoading(false); }
   }
 
-  function detail(requestedDetail: RequestedDetail) { if (!requestRef.current || coachLoading) return; const request = { ...requestRef.current, locale, requestedDetail }; requestRef.current = request; void fetchCoach(request); }
+  async function detail(requestedDetail: RequestedDetail) {
+    if (!requestRef.current || coachLoading) return;
+    const question=requestedDetail==="hint_2"?messages.coach.hint2:requestedDetail==="hint_3"?messages.coach.hint3:messages.conversation.whatShouldIDo;
+    appendConversation(newMessage({sequence:(profileRef.current?.currentGame?.conversationMessages?.length||0)+1,gameId:requestRef.current.gameId,turnId:requestRef.current.turnId,role:"player",type:"player_question",locale,status:"complete",text:question}));
+    let request:CoachRequest={...requestRef.current,locale,requestedDetail};
+    if(requestedDetail==="hint_3"){
+      const current=profileRef.current;
+      if(current?.currentGame){
+        const chess=gameFrom(current),choices=legalMoves(chess);
+        if(choices.length){
+          setCoachLoading(true);
+          try{
+            const result=await stockfish.searchMove({fen:chess.fen(),legalMoves:choices,level:"beginner",multiPv:3,moveTimeMs:500,onAnalysis:setEngineAnalysis});
+            const suggested=result&&choices.find(move=>move.from===result.bestMove.from&&move.to===result.bestMove.to&&move.promotion===result.bestMove.promotion);
+            if(result?.finalAnalysis)setEngineAnalysis(result.finalAnalysis);
+            if(suggested){const explained=new Chess(chess.fen()).move({from:suggested.from,to:suggested.to,promotion:suggested.promotion});request={...request,recommendedMove:toMoveRecord(explained),legalMovesAfterOpponentMove:[suggested.san,...choices.filter(move=>move!==suggested).map(move=>move.san)]};}
+          }catch{
+            const fallback=await new BeginnerOpponentEngine(chess.moveNumber()*3571).chooseMove({fen:chess.fen(),legalMoves:choices,level:"beginner"});
+            const suggested=fallback&&choices.find(move=>move.from===fallback.from&&move.to===fallback.to&&move.promotion===fallback.promotion);
+            if(suggested){const explained=new Chess(chess.fen()).move({from:suggested.from,to:suggested.to,promotion:suggested.promotion});request={...request,recommendedMove:toMoveRecord(explained),legalMovesAfterOpponentMove:[suggested.san,...choices.filter(move=>move!==suggested).map(move=>move.san)]};}
+          }finally{setCoachLoading(false);}
+        }
+      }
+    }
+    requestRef.current=request;await fetchCoach(request);
+  }
 
   function restart() {
-    const current = profileRef.current; if (!current) return; abortRef.current?.abort(); const next = newGame(current); commitProfile(next); setFen(next.currentGame!.fen); setCoach(null); requestRef.current = null; setLastMove(undefined); setSelected(null); setTargets([]); setOpponentPreview(null); setThinking(false);
+    const current = profileRef.current; if (!current) return; abortRef.current?.abort(); stockfish.cancelSearch(); const next = newGame(current); commitProfile(next); setFen(next.currentGame!.fen); setConversation([]); setTransientMessage(null); setEngineAnalysis(null); requestRef.current = null; setCanAskCoach(false); setLastMove(undefined); setSelected(null); setTargets([]); setOpponentPreview(null); setThinking(false);
   }
   function undo() { navigateTimeline(-1); }
   function redo() { navigateTimeline(1); }
@@ -252,18 +304,19 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
     const current = profileRef.current; if (!current || thinking) return;
     commitProfile({ ...current, opponentEngine:value }); setOpponentEngine(value); setNotice(null);
   }
-  function reset() { abortRef.current?.abort(); clearProfile(); profileRef.current = null; requestRef.current = null; setProfile(null); setResetConfirm(false); setCoach(null); setFen(new Chess().fen()); }
+  function changeCoachMode(value: CoachMode) { const current=profileRef.current;if(!current)return;commitProfile({...current,coachMode:value}); }
+  function reset() { abortRef.current?.abort(); stockfish.cancelSearch(); clearProfile(); profileRef.current = null; requestRef.current = null; setCanAskCoach(false); setProfile(null); setResetConfirm(false); setConversation([]); setTransientMessage(null); setEngineAnalysis(null); setFen(new Chess().fen()); }
 
   if (!ready) return <div className="app-shell">{messages.common.loading}</div>;
-  if (!profile) return <WelcomeDialog messages={messages} onStart={start} />;
+  if (!profile) return <WelcomeDialog messages={messages} locale={locale} onLocale={changeLocale} onStart={start} />;
   const game = gameFrom(profile); const status = game.isCheckmate() ? messages.game.checkmate : game.isDraw() ? messages.game.draw : game.inCheck() ? messages.game.check : thinking ? messages.game.computerThinking : messages.game.yourTurn;
   const guides = [messages.guide.one,messages.guide.two,messages.guide.three];
   const timeline = profile.currentGame?.timeline; const canUndo = Boolean(timeline && timeline.cursor > 0); const canRedo = Boolean(timeline && timeline.cursor < timeline.nodes.length-1);
-  const opponentSeat = <div className="player-seat opponent"><div className="seat-person"><div className="seat-avatar">♞</div><div><div className="seat-name">{messages.game.opponent}</div><div className="seat-role engine-role"><span>{messages.game.black}</span><select data-testid="engine-select" aria-label={messages.game.chooseEngine} value={profile.opponentEngine ?? "stockfish"} disabled={thinking} onChange={(event)=>changeOpponentEngine(event.target.value as "stockfish" | "starter")}><option value="stockfish">{messages.game.engineStockfish}</option><option value="starter">{messages.game.engineStarter}</option></select></div></div></div><div className="seat-state">{thinking && <span className="thinking-dots" aria-hidden="true"><i/><i/><i/></span>}{thinking ? messages.game.computerThinking : messages.game.computerTurn}</div></div>;
-  const userSeat = <div className="player-seat user"><div className="seat-person"><div className="seat-avatar">♙</div><div><div className="seat-name">{profile.nickname} · {messages.game.you}</div><div className="seat-role">{messages.game.playingWhite}</div></div></div><div className="seat-state">{!thinking && !game.isGameOver() ? messages.game.yourTurn : ""}</div></div>;
+  const opponentSeat = <div className="player-seat opponent"><div className="seat-person"><Avatar kind="opponent" size="large"/><div><div className="seat-name">{messages.game.opponent}</div><div className="seat-role engine-role"><span>{messages.game.black}</span><select data-testid="engine-select" aria-label={messages.game.chooseEngine} value={profile.opponentEngine ?? "stockfish"} disabled={thinking} onChange={(event)=>changeOpponentEngine(event.target.value as "stockfish" | "starter")}><option value="stockfish">{messages.game.engineStockfish}</option><option value="starter">{messages.game.engineStarter}</option></select></div></div></div><div className="seat-state">{thinking && <span className="thinking-dots" aria-hidden="true"><i/><i/><i/></span>}{thinking ? messages.game.computerThinking : messages.game.computerTurn}</div></div>;
+  const userSeat = <div className="player-seat user"><div className="seat-person"><Avatar kind="player" profile={profile} size="large"/><div><div className="seat-name">{profile.nickname} · {messages.game.you}</div><div className="seat-role">{messages.game.playingWhite}</div></div></div><div className="seat-state">{!thinking && !game.isGameOver() ? messages.game.yourTurn : ""}</div></div>;
   return <div className="app-shell" data-opponent-engine={opponentEngine}>
     <header className="topbar"><div className="brand"><div className="brand-mark">♞</div><div><div className="brand-name">{messages.header.product}</div><div className="brand-sub">{messages.header.stage}</div></div></div>
-      <div className="top-actions"><div className="pill player-pill"><span className="avatar">{profile.nickname.slice(0,1).toUpperCase()}</span><span>{profile.nickname}</span></div><label className="sr-only" htmlFor="locale">{messages.header.language}</label><select id="locale" className="pill" value={locale} onChange={(e) => changeLocale(e.target.value as SupportedLocale)}><option value="zh-CN">简体中文</option><option value="en">English</option><option value="ja">日本語</option></select><button className="icon-button" onClick={() => setHelp(true)} aria-label={messages.header.help}>?</button><button className="icon-button" onClick={() => setResetConfirm(true)} aria-label={messages.header.switchPlayer}>↪</button></div>
+      <div className="top-actions"><div className="pill player-pill"><Avatar kind="player" profile={profile} size="small"/><span>{profile.nickname}</span></div><label className="sr-only" htmlFor="locale">{messages.header.language}</label><select id="locale" className="pill" value={locale} onChange={(e) => changeLocale(e.target.value as SupportedLocale)}><option value="zh-CN">简体中文</option><option value="en">English</option><option value="ja">日本語</option></select><button className="icon-button" onClick={() => setReferenceTab("rules")} aria-label={messages.header.help}>?</button><button className="icon-button" onClick={() => setResetConfirm(true)} aria-label={messages.header.switchPlayer}>↪</button></div>
     </header>
     <main className="main-grid"><section className="board-column">
       <div className="game-status"><div className="status-main"><span className={`status-dot ${thinking ? "thinking":""}`} />{status}</div>{lastMove && <small>{messages.game.lastMove}: {lastMove.from}–{lastMove.to}</small>}</div>
@@ -272,10 +325,10 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
       <ChessBoard fen={fen} selected={selected} legalTargets={targets} lastMove={lastMove} flipped={flipped} locked={thinking || game.isGameOver()} onSquare={onSquare} onDrop={attemptMove} pieceLabels={messages.pieces} sideLabels={{white:messages.game.white,black:messages.game.black}} opponentPreview={opponentPreview} />
       {flipped ? opponentSeat : userSeat}
       {notice && <div className="rule-toast" role="status" style={{marginTop:12}}>{notice}</div>}
-      <div className="board-toolbar"><button className="pill" onClick={restart}>↻ {messages.common.restart}</button><button className="pill" data-testid="undo" onClick={undo} disabled={thinking || !canUndo}>↶ {messages.common.undo}</button><button className="pill" data-testid="redo" onClick={redo} disabled={thinking || !canRedo}>↷ {messages.common.redo}</button><button className="pill" onClick={() => setFlipped((v) => !v)}>⇅ {messages.header.flip}</button><button className="pill" onClick={() => setHelp(true)}>⌘ {messages.header.help}</button></div>
-    </section><CoachPanel messages={messages} response={coach} loading={coachLoading} profile={profile} onDetail={detail} /></main>
+      <div className="board-toolbar"><button className="pill" onClick={restart}>↻ {messages.common.restart}</button><button className="pill" data-testid="undo" onClick={undo} disabled={thinking || !canUndo}>↶ {messages.common.undo}</button><button className="pill" data-testid="redo" onClick={redo} disabled={thinking || !canRedo}>↷ {messages.common.redo}</button><button className="pill" onClick={() => setFlipped((v) => !v)}>⇅ {messages.header.flip}</button><button className="pill" onClick={() => setReferenceTab("rules")}>♙ {referenceContent[locale].rulesButton}</button><button className="pill" onClick={() => setReferenceTab("tips")}>✦ {referenceContent[locale].tipsButton}</button></div>
+    </section><ConversationPanel messages={messages} items={transientMessage?[...conversation,transientMessage]:conversation} thinking={thinking||coachLoading} canAsk={canAskCoach} analysis={engineAnalysis} coachMode={profile.coachMode??"local"} profile={profile} onCoachMode={changeCoachMode} onAsk={detail} /></main>
     {promotion && <div className="modal-backdrop"><div className="modal"><h2>{messages.game.promotion}</h2><div className="promotion-grid">{(["q","r","b","n"] as PromotionPiece[]).map((p) => <button key={p} aria-label={messages.pieces[{q:"queen",r:"rook",b:"bishop",n:"knight"}[p] as "queen"]} onClick={() => { const chess=gameFrom(profileRef.current!); void executeUserMove(chess,promotion.from,promotion.to,p); }}>{({q:"♕",r:"♖",b:"♗",n:"♘"})[p]}</button>)}</div><div className="modal-actions"><button className="secondary" onClick={() => setPromotion(null)}>{messages.common.cancel}</button></div></div></div>}
-    {help && <div className="modal-backdrop" onMouseDown={() => setHelp(false)}><div className="modal" onMouseDown={(e) => e.stopPropagation()}><h2>{messages.help.title}</h2><p>{messages.help.orientation}</p><p>{messages.help.pieces}</p><p>{messages.help.check}</p><p>{messages.help.special}</p><div className="modal-actions"><button className="primary" onClick={() => setHelp(false)}>{messages.common.close}</button></div></div></div>}
+    {referenceTab&&<LearningReferenceDialog locale={locale} tab={referenceTab} onTab={setReferenceTab} onClose={()=>setReferenceTab(null)}/>}
     {resetConfirm && <div className="modal-backdrop"><div className="modal"><h2>{messages.reset.title}</h2><p>{messages.reset.description}</p><div className="modal-actions"><button className="secondary" onClick={() => setResetConfirm(false)}>{messages.common.cancel}</button><button className="primary" onClick={reset}>{messages.common.confirm}</button></div></div></div>}
   </div>;
 }

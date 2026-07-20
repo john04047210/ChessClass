@@ -20,7 +20,7 @@
     "nickname": "Nickname",
     "placeholder": "For example: Rookie",
     "start": "Start learning",
-    "required": "Enter a nickname between 1 and 20 characters"
+    "required": "Enter a nickname between 1 and 20 characters", "gender": "Avatar style", "male": "Male", "female": "Female", "undisclosed": "Prefer not to say"
   },
   "header": {
     "product": "Kiro",
@@ -67,9 +67,14 @@
     "more": "Explain a little more",
     "hint": "Give me a hint",
     "hint2": "Make it more specific",
-    "hint3": "Show a suggested move",
+    "hint3": "Recommended move",
     "fallback": "AI explanations are unavailable, so the basic coach has taken over.",
     "thinking": "The coach is reviewing this turn…"
+  },
+  "conversation": {
+    "title": "Conversation", "me": "Me", "opponent": "Opponent", "coach": "Coach", "system": "System",
+    "coachMode": "Coach mode", "localCoach": "Basic coach", "coachOff": "Coach off", "empty": "Make your first move and we’ll review the game here together.",
+    "analyzing": "Opponent is analyzing", "showDetails": "Show engine details", "hideDetails": "Hide engine details", "depth": "Search depth", "score": "Position score", "mainLine": "Main line", "whatShouldIDo": "What should I do?"
   },
   "progress": {
     "title": "Your progress",
