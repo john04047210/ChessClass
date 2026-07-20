@@ -8,6 +8,7 @@
 - [关键设计决策](docs/DECISIONS.md)
 - [产品路线图](docs/ROADMAP.md)
 - [局面感知型本地教练草案](docs/features/position-aware-local-coach.md)
+- [右侧真人式对话教练改造方案 v3](docs/features/conversational-coach-v3.md)
 - [Codex 项目协作规范](AGENTS.md)
 
 ## MVP 功能
