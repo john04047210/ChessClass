@@ -2,6 +2,14 @@
 
 一个面向完全零基础用户的网页版国际象棋陪练。用户无需注册，输入昵称即可执白棋与初学者电脑对弈；每个完整回合都会获得简短讲解、谨慎表述的意图猜测和下一步观察提示。
 
+## 项目文档
+
+- [当前项目状态](docs/CURRENT_STATE.md)
+- [关键设计决策](docs/DECISIONS.md)
+- [产品路线图](docs/ROADMAP.md)
+- [局面感知型本地教练草案](docs/features/position-aware-local-coach.md)
+- [Codex 项目协作规范](AGENTS.md)
+
 ## MVP 功能
 
 - 完整的 `chess.js` 规则边界：合法着法、将军/将死、和棋、升变、王车易位和吃过路兵
