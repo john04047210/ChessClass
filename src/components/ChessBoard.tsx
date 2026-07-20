@@ -17,24 +17,38 @@ interface Props {
 
 export function ChessBoard({ fen, selected, legalTargets, lastMove, flipped, locked, onSquare, onDrop, pieceLabels, sideLabels, opponentPreview }: Props) {
   const chess = useMemo(() => new Chess(fen), [fen]);
-  const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tooltipShowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tooltipHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
   const files = flipped ? ["h","g","f","e","d","c","b","a"] : ["a","b","c","d","e","f","g","h"];
   const ranks = flipped ? [1,2,3,4,5,6,7,8] : [8,7,6,5,4,3,2,1];
   const checkedKing = chess.inCheck() ? chess.board().flat().find((p) => p?.type === "k" && p.color === chess.turn())?.square : undefined;
 
-  useEffect(() => () => { if (tooltipTimer.current) clearTimeout(tooltipTimer.current); }, []);
+  useEffect(() => () => {
+    if (tooltipShowTimer.current) clearTimeout(tooltipShowTimer.current);
+    if (tooltipHideTimer.current) clearTimeout(tooltipHideTimer.current);
+  }, []);
 
   function queueTooltip(element: HTMLElement, text: string) {
-    if (tooltipTimer.current) clearTimeout(tooltipTimer.current);
+    if (tooltipShowTimer.current) clearTimeout(tooltipShowTimer.current);
+    if (tooltipHideTimer.current) clearTimeout(tooltipHideTimer.current);
     setTooltip(null);
     const rect = element.getBoundingClientRect();
-    tooltipTimer.current = setTimeout(() => setTooltip({ text, x: rect.left + rect.width / 2, y: rect.top - 7 }), 1000);
+    tooltipShowTimer.current = setTimeout(() => {
+      setTooltip({ text, x: rect.left + rect.width / 2, y: rect.top - 7 });
+      tooltipShowTimer.current = null;
+      tooltipHideTimer.current = setTimeout(() => {
+        setTooltip(null);
+        tooltipHideTimer.current = null;
+      }, 2000);
+    }, 1000);
   }
 
   function hideTooltip() {
-    if (tooltipTimer.current) clearTimeout(tooltipTimer.current);
-    tooltipTimer.current = null;
+    if (tooltipShowTimer.current) clearTimeout(tooltipShowTimer.current);
+    if (tooltipHideTimer.current) clearTimeout(tooltipHideTimer.current);
+    tooltipShowTimer.current = null;
+    tooltipHideTimer.current = null;
     setTooltip(null);
   }
 

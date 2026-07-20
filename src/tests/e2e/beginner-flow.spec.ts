@@ -6,7 +6,7 @@ const siteUrl = (path: string) => `${sitePath}${path}`;
 for (const locale of ["zh-CN","en","ja"]) test(`beginner flow works in ${locale}`,async({page})=>{
   await page.goto(siteUrl(`/${locale}`)); await page.locator("#nickname").fill(`Learner-${locale}`); await page.locator("form button[type=submit]").click();
   await expect(page.locator("[aria-label='Chess board']")).toBeVisible();
-  if(locale==="zh-CN"){await page.locator("[data-square='b1']").hover();await expect(page.getByRole("tooltip")).toHaveText("白方 · 马",{timeout:2_000});await page.locator("[data-square='e2']").hover();}
+  if(locale==="zh-CN"){await page.locator("[data-square='b1']").hover();await expect(page.getByRole("tooltip")).toHaveText("白方 · 马",{timeout:2_000});await expect(page.getByRole("tooltip")).toBeHidden({timeout:2_500});await page.locator("[data-square='e2']").hover();}
   const playerId=await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!).playerId);
   await page.locator("[data-square='e2']").click(); await page.locator("[data-square='e4']").click();
   if(locale==="zh-CN"){await expect(page.locator("[data-animation-phase='preparing']")).toBeVisible({timeout:3_000});await expect(page.locator("[data-animation-phase='landed']")).toBeVisible({timeout:3_000});}
