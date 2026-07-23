@@ -37,9 +37,10 @@
     "opponent": "Computer opponent",
     "you": "You",
     "beginnerOpponent": "Beginner partner",
-    "engineFallback": "Stockfish could not start, so the lightweight starter engine is being used.",
-    "engineStockfish": "Stockfish 18 · Beginner",
-    "engineStarter": "Lightweight starter engine · Beginner",
+    "engineFallback": "The challenging chess buddy could not start, so the beginner buddy is playing instead.",
+    "engineStockfish": "Challenging chess buddy · Challenge mode",
+    "engineGrowing": "Growing chess buddy · Practice mode",
+    "engineStarter": "Beginner chess buddy · Easy mode",
     "chooseEngine": "Choose computer engine",
     "playingWhite": "Playing White",
     "check": "Check! Protect your king",
@@ -89,7 +90,8 @@
     "one": "White begins at the bottom and moves upward. You are White.",
     "two": "White moves first. Click or drag a piece, then choose a highlighted square.",
     "three": "Pawns move forward but capture diagonally. Try a central pawn first.",
-    "next": "Got it"
+    "next": "Got it",
+    "dismiss": "Don't show again"
   },
   "help": {
     "title": "Basic rules",

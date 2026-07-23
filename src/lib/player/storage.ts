@@ -1,4 +1,4 @@
-import type { PlayerGender, PlayerProfile, SupportedLocale } from "@/lib/types";
+import type { OpponentEngineId, PlayerGender, PlayerProfile, SupportedLocale } from "@/lib/types";
 import { createUuid } from "@/lib/id";
 
 export const PROFILE_KEY = "chess-coach-player-v1";
@@ -11,6 +11,7 @@ export function createProfile(nickname: string, locale: SupportedLocale, gender:
     preferredLocale: locale,
     opponentEngine: "stockfish",
     coachMode: "local",
+    guideDismissed: false,
     gender,
     avatarId: gender==="male"?"male":gender==="female"?"female":"neutral",
     createdAt: now,
@@ -30,10 +31,13 @@ export function loadProfile(): PlayerProfile | null {
     if (!value) return null;
     const profile = JSON.parse(value) as PlayerProfile;
     if (!profile.playerId || !profile.nickname) return null;
+    const savedEngine = profile.opponentEngine as string | undefined;
+    const opponentEngine: OpponentEngineId = savedEngine === "starter" || savedEngine === "growing" || savedEngine === "stockfish" ? savedEngine : "stockfish";
     return {
       ...profile,
-      opponentEngine: profile.opponentEngine ?? "stockfish",
+      opponentEngine,
       coachMode: profile.coachMode ?? "local",
+      guideDismissed: profile.guideDismissed ?? false,
       gender: profile.gender ?? "undisclosed",
       avatarId: profile.avatarId === "male" || profile.avatarId === "female" || profile.avatarId === "neutral" ? profile.avatarId : "neutral",
       currentGame: profile.currentGame ? {

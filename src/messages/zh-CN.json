@@ -37,9 +37,10 @@
     "opponent": "电脑对手",
     "you": "你",
     "beginnerOpponent": "入门陪练",
-    "engineFallback": "Stockfish 暂时无法启动，已切换到轻量启蒙引擎。",
-    "engineStockfish": "Stockfish 18 · 入门难度",
-    "engineStarter": "轻量启蒙引擎 · 入门难度",
+    "engineFallback": "进阶棋友暂时无法启动，已切换到小白棋友。",
+    "engineStockfish": "进阶棋友 · 挑战模式",
+    "engineGrowing": "成长棋友 · 练习模式",
+    "engineStarter": "小白棋友 · 轻松模式",
     "chooseEngine": "选择电脑引擎",
     "playingWhite": "执白方",
     "check": "将军！请保护你的王",
@@ -89,7 +90,8 @@
     "one": "白方从棋盘下方向上走，你执白棋。",
     "two": "白方先走。点击或拖动棋子，再选择高亮的落点。",
     "three": "兵通常向前走，但只能斜着吃子。先试试中央的兵。",
-    "next": "知道了"
+    "next": "知道了",
+    "dismiss": "不再显示"
   },
   "help": {
     "title": "基础规则速查",

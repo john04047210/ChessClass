@@ -4,6 +4,7 @@ import { Chess, type Move, type Square } from "chess.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BeginnerOpponentEngine } from "@/lib/chess/beginner-opponent-engine";
+import { GrowingOpponentEngine } from "@/lib/chess/growing-opponent-engine";
 import { legalMoves, statusOf, toMoveRecord } from "@/lib/chess/game-controller";
 import { StockfishOpponentEngine } from "@/lib/chess/stockfish-opponent-engine";
 import { LocalCoachService, ruleForMove } from "@/lib/coach/local-coach-service";
@@ -11,7 +12,7 @@ import { analysisText, moveSentence, newMessage, thinkingText } from "@/lib/conv
 import type { Messages } from "@/lib/i18n/messages";
 import { createUuid } from "@/lib/id";
 import { clearProfile, createProfile, loadProfile, saveProfile } from "@/lib/player/storage";
-import type { CoachMode, CoachRequest, CoachResponse, ConversationMessage, EngineAnalysisSnapshot, GameHistoryNode, PlayerGender, PlayerProfile, PromotionPiece, RequestedDetail, SupportedLocale } from "@/lib/types";
+import type { CoachMode, CoachRequest, CoachResponse, ConversationMessage, EngineAnalysisSnapshot, GameHistoryNode, OpponentEngineId, PlayerGender, PlayerProfile, PromotionPiece, RequestedDetail, SupportedLocale } from "@/lib/types";
 import { ChessBoard } from "./ChessBoard";
 import { Avatar } from "./Avatar";
 import { LearningReferenceDialog } from "./LearningReferenceDialog";
@@ -63,7 +64,7 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
   const [lastMove, setLastMove] = useState<{from:string;to:string} | undefined>();
   const [flipped, setFlipped] = useState(false);
   const [thinking, setThinking] = useState(false);
-  const [opponentEngine, setOpponentEngine] = useState<"stockfish" | "starter">("stockfish");
+  const [opponentEngine, setOpponentEngine] = useState<OpponentEngineId>("stockfish");
   const [coachLoading, setCoachLoading] = useState(false);
   const [canAskCoach, setCanAskCoach] = useState(false);
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
@@ -93,14 +94,14 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
       profileRef.current = loaded;
       // Hydration must wait for the browser-only localStorage source.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      const visible=visibleConversation(loaded);setProfile(loaded); setFen(gameFrom(loaded).fen()); setConversation(visible); setEngineAnalysis(latestAnalysis(visible)); requestRef.current = restoredCoach?.request || null; setCanAskCoach(Boolean(restoredCoach?.request)); saveProfile(loaded);
+      const visible=visibleConversation(loaded);setProfile(loaded); setFen(gameFrom(loaded).fen()); setConversation(visible); setEngineAnalysis(latestAnalysis(visible)); setOpponentEngine(loaded.opponentEngine ?? "stockfish"); requestRef.current = restoredCoach?.request || null; setCanAskCoach(Boolean(restoredCoach?.request)); saveProfile(loaded);
     }
     setReady(true);
     return () => { abortRef.current?.abort(); stockfish.dispose(); };
   }, [locale, stockfish]);
 
   function start(nickname: string,gender:PlayerGender) {
-    const next = newGame(createProfile(nickname, locale,gender)); commitProfile(next); setFen(next.currentGame!.fen); setConversation([]);
+    const next = newGame(createProfile(nickname, locale,gender)); commitProfile(next); setFen(next.currentGame!.fen); setConversation([]); setOpponentEngine(next.opponentEngine ?? "stockfish"); setGuide(0);
   }
 
   function appendConversation(message: ConversationMessage) {
@@ -194,16 +195,22 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
     if (!chess.isGameOver()) {
       const choices = legalMoves(chess);
       let choice;
-      try {
-        if ((current.opponentEngine ?? "stockfish") === "starter") throw new Error("Starter engine selected");
-        const result = await stockfish.searchMove({ fen: chess.fen(), legalMoves: choices, level: "beginner", multiPv:3, onAnalysis:snapshot=>{setEngineAnalysis(snapshot);setTransientMessage(newMessage({sequence:(profileRef.current?.currentGame?.conversationMessages?.length||0)+1,gameId:activeGameId,turnId,role:"opponent",type:"opponent_analysis",locale,status:"streaming",text:analysisText(locale,snapshot),engineAnalysis:snapshot}));} });
-        choice = result?.bestMove; if(result?.finalAnalysis){moveAnalysis=result.finalAnalysis;setEngineAnalysis(result.finalAnalysis);}
-        setOpponentEngine("stockfish");
-      } catch {
-        const fallback = new BeginnerOpponentEngine(chess.moveNumber() * 7919 + current.lessonProgress.legalMovesMade);
-        choice = await fallback.chooseMove({ fen: chess.fen(), legalMoves: choices, level: "beginner" });
-        setOpponentEngine("starter");
-        if ((current.opponentEngine ?? "stockfish") === "stockfish") setNotice(messages.game.engineFallback);
+      const selectedEngine = current.opponentEngine ?? "stockfish";
+      if (selectedEngine === "starter") {
+        choice = await new BeginnerOpponentEngine(chess.moveNumber() * 7919 + current.lessonProgress.legalMovesMade).chooseMove({ fen: chess.fen(), legalMoves: choices, level: "beginner" });
+        setEngineAnalysis(null); setOpponentEngine("starter");
+      } else if (selectedEngine === "growing") {
+        choice = await new GrowingOpponentEngine(chess.moveNumber() * 6151 + current.lessonProgress.legalMovesMade).chooseMove({ fen: chess.fen(), legalMoves: choices, level: "beginner" });
+        setEngineAnalysis(null); setOpponentEngine("growing");
+      } else {
+        try {
+          const result = await stockfish.searchMove({ fen: chess.fen(), legalMoves: choices, level: "beginner", multiPv:3, onAnalysis:snapshot=>{setEngineAnalysis(snapshot);setTransientMessage(newMessage({sequence:(profileRef.current?.currentGame?.conversationMessages?.length||0)+1,gameId:activeGameId,turnId,role:"opponent",type:"opponent_analysis",locale,status:"streaming",text:analysisText(locale,snapshot),engineAnalysis:snapshot}));} });
+          choice = result?.bestMove; if(result?.finalAnalysis){moveAnalysis=result.finalAnalysis;setEngineAnalysis(result.finalAnalysis);}
+          setOpponentEngine("stockfish");
+        } catch {
+          choice = await new BeginnerOpponentEngine(chess.moveNumber() * 7919 + current.lessonProgress.legalMovesMade).chooseMove({ fen: chess.fen(), legalMoves: choices, level: "beginner" });
+          setEngineAnalysis(null); setOpponentEngine("starter"); setNotice(messages.game.engineFallback);
+        }
       }
       if (choice) {
         setOpponentPreview({from:choice.from,to:choice.to,phase:"preparing"});
@@ -300,19 +307,21 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
   function changeLocale(value: SupportedLocale) {
     const current = profileRef.current; if (current) commitProfile({ ...current, preferredLocale:value }); document.cookie = `chess-locale=${value};path=/;max-age=31536000;samesite=lax`; router.push(`/${value}`);
   }
-  function changeOpponentEngine(value: "stockfish" | "starter") {
+  function changeOpponentEngine(value: OpponentEngineId) {
     const current = profileRef.current; if (!current || thinking) return;
     commitProfile({ ...current, opponentEngine:value }); setOpponentEngine(value); setNotice(null);
   }
   function changeCoachMode(value: CoachMode) { const current=profileRef.current;if(!current)return;commitProfile({...current,coachMode:value}); }
-  function reset() { abortRef.current?.abort(); stockfish.cancelSearch(); clearProfile(); profileRef.current = null; requestRef.current = null; setCanAskCoach(false); setProfile(null); setResetConfirm(false); setConversation([]); setTransientMessage(null); setEngineAnalysis(null); setFen(new Chess().fen()); }
+  function dismissGuide() { const current=profileRef.current;if(!current)return;commitProfile({...current,guideDismissed:true}); }
+  function reset() { abortRef.current?.abort(); stockfish.cancelSearch(); clearProfile(); profileRef.current = null; requestRef.current = null; setCanAskCoach(false); setProfile(null); setResetConfirm(false); setConversation([]); setTransientMessage(null); setEngineAnalysis(null); setGuide(0); setFen(new Chess().fen()); }
 
   if (!ready) return <div className="app-shell">{messages.common.loading}</div>;
   if (!profile) return <WelcomeDialog messages={messages} locale={locale} onLocale={changeLocale} onStart={start} />;
   const game = gameFrom(profile); const status = game.isCheckmate() ? messages.game.checkmate : game.isDraw() ? messages.game.draw : game.inCheck() ? messages.game.check : thinking ? messages.game.computerThinking : messages.game.yourTurn;
   const guides = [messages.guide.one,messages.guide.two,messages.guide.three];
+  const isLastGuide = guide === guides.length - 1;
   const timeline = profile.currentGame?.timeline; const canUndo = Boolean(timeline && timeline.cursor > 0); const canRedo = Boolean(timeline && timeline.cursor < timeline.nodes.length-1);
-  const opponentSeat = <div className="player-seat opponent"><div className="seat-person"><Avatar kind="opponent" size="large"/><div><div className="seat-name">{messages.game.opponent}</div><div className="seat-role engine-role"><span>{messages.game.black}</span><select data-testid="engine-select" aria-label={messages.game.chooseEngine} value={profile.opponentEngine ?? "stockfish"} disabled={thinking} onChange={(event)=>changeOpponentEngine(event.target.value as "stockfish" | "starter")}><option value="stockfish">{messages.game.engineStockfish}</option><option value="starter">{messages.game.engineStarter}</option></select></div></div></div><div className="seat-state">{thinking && <span className="thinking-dots" aria-hidden="true"><i/><i/><i/></span>}{thinking ? messages.game.computerThinking : messages.game.computerTurn}</div></div>;
+  const opponentSeat = <div className="player-seat opponent"><div className="seat-person"><Avatar kind="opponent" size="large"/><div><div className="seat-name">{messages.game.opponent}</div><div className="seat-role engine-role"><span>{messages.game.black}</span><select data-testid="engine-select" aria-label={messages.game.chooseEngine} value={profile.opponentEngine ?? "stockfish"} disabled={thinking} onChange={(event)=>changeOpponentEngine(event.target.value as OpponentEngineId)}><option value="starter">{messages.game.engineStarter}</option><option value="growing">{messages.game.engineGrowing}</option><option value="stockfish">{messages.game.engineStockfish}</option></select></div></div></div><div className="seat-state">{thinking && <span className="thinking-dots" aria-hidden="true"><i/><i/><i/></span>}{thinking ? messages.game.computerThinking : messages.game.computerTurn}</div></div>;
   const userSeat = <div className="player-seat user"><div className="seat-person"><Avatar kind="player" profile={profile} size="large"/><div><div className="seat-name">{profile.nickname} · {messages.game.you}</div><div className="seat-role">{messages.game.playingWhite}</div></div></div><div className="seat-state">{!thinking && !game.isGameOver() ? messages.game.yourTurn : ""}</div></div>;
   return <div className="app-shell" data-opponent-engine={opponentEngine}>
     <header className="topbar"><div className="brand"><div className="brand-mark">♞</div><div><div className="brand-name">{messages.header.product}</div><div className="brand-sub">{messages.header.stage}</div></div></div>
@@ -320,7 +329,7 @@ export function ChessLearningApp({ locale, messages }: { locale: SupportedLocale
     </header>
     <main className="main-grid"><section className="board-column">
       <div className="game-status"><div className="status-main"><span className={`status-dot ${thinking ? "thinking":""}`} />{status}</div>{lastMove && <small>{messages.game.lastMove}: {lastMove.from}–{lastMove.to}</small>}</div>
-      {guide < guides.length && <div className="guide-card"><span>✦</span><p><strong>{messages.guide.title}</strong><br/>{guides[guide]}</p><button onClick={() => setGuide((v) => v+1)}>{messages.guide.next} →</button></div>}
+      {!profile.guideDismissed && guide < guides.length && <div className="guide-card"><span>✦</span><p><strong>{messages.guide.title}</strong><br/>{guides[guide]}</p><div className="guide-actions"><button onClick={() => setGuide((v) => v+1)}>{messages.guide.next}{!isLastGuide && " →"}</button>{isLastGuide && <button className="guide-dismiss" data-testid="guide-dismiss" onClick={dismissGuide}>{messages.guide.dismiss}</button>}</div></div>}
       {flipped ? userSeat : opponentSeat}
       <ChessBoard fen={fen} selected={selected} legalTargets={targets} lastMove={lastMove} flipped={flipped} locked={thinking || game.isGameOver()} onSquare={onSquare} onDrop={attemptMove} pieceLabels={messages.pieces} sideLabels={{white:messages.game.white,black:messages.game.black}} opponentPreview={opponentPreview} />
       {flipped ? opponentSeat : userSeat}

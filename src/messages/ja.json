@@ -37,9 +37,10 @@
     "opponent": "コンピューター対戦相手",
     "you": "あなた",
     "beginnerOpponent": "入門パートナー",
-    "engineFallback": "Stockfishを起動できないため、軽量な入門エンジンに切り替えました。",
-    "engineStockfish": "Stockfish 18 · 入門難度",
-    "engineStarter": "軽量入門エンジン · 入門難度",
+    "engineFallback": "チャレンジ棋友を起動できないため、初心者棋友に切り替えました。",
+    "engineStockfish": "チャレンジ棋友・挑戦モード",
+    "engineGrowing": "成長棋友・練習モード",
+    "engineStarter": "初心者棋友・気軽モード",
     "chooseEngine": "コンピューターエンジンを選択",
     "playingWhite": "白を担当",
     "check": "チェック！キングを守りましょう",
@@ -89,7 +90,8 @@
     "one": "白は盤の下から上へ進みます。あなたは白です。",
     "two": "白が先手です。駒をクリックまたはドラッグし、光ったマスを選びます。",
     "three": "ポーンは前進し、斜めに駒を取ります。中央のポーンから試しましょう。",
-    "next": "わかりました"
+    "next": "わかりました",
+    "dismiss": "今後表示しない"
   },
   "help": {
     "title": "基本ルール早見表",

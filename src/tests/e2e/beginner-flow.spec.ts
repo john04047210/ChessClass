@@ -33,7 +33,7 @@ for (const locale of ["zh-CN","en","ja"]) test(`beginner flow works in ${locale}
 
 test("rules and practical tips remain available during a game",async({page})=>{
   await page.goto(siteUrl("/zh-CN"));await page.locator("#nickname").fill("规则学习者");await page.locator("form button[type=submit]").click();
-  await page.getByRole("button",{name:"规则",exact:true}).click();
+  await page.locator(".board-toolbar").getByRole("button",{name:/规则/}).click();
   await expect(page.getByRole("heading",{name:"国际象棋规则"})).toBeVisible();
   await expect(page.locator(".reference-board span")).toHaveCount(64);
   await page.getByRole("button",{name:"技巧",exact:true}).click();
@@ -45,6 +45,15 @@ test("the selected avatar style is saved locally",async({page})=>{
   await page.goto(siteUrl("/zh-CN"));await page.locator("#nickname").fill("女生头像测试");await page.getByText("女生",{exact:true}).click();await page.locator("form button[type=submit]").click();
   const profile=await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!));expect(profile.gender).toBe("female");expect(profile.avatarId).toBe("female");
   await expect(page.locator(".avatar-player").first()).toHaveText("👩");expect(await page.evaluate(()=>Object.keys(localStorage).filter(key=>key.includes("analytics")))).toEqual([]);
+});
+
+test("the beginner guide can be permanently dismissed on its last step",async({page})=>{
+  await page.goto(siteUrl("/zh-CN"));await page.locator("#nickname").fill("引导测试");await page.locator("form button[type=submit]").click();
+  await expect(page.getByText("先记住这一点")).toBeVisible();
+  await page.getByRole("button",{name:"知道了 →"}).click();await page.getByRole("button",{name:"知道了 →"}).click();
+  await expect(page.getByTestId("guide-dismiss")).toHaveText("不再显示");await page.getByTestId("guide-dismiss").click();
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!).guideDismissed)).toBe(true);
+  await page.reload();await expect(page.getByText("先记住这一点")).toHaveCount(0);
 });
 
 test("local coach can be disabled while the computer conversation remains",async({page})=>{
@@ -71,6 +80,7 @@ test("a first-time visitor can change language before creating a profile",async(
 test("the starter engine takes over when Stockfish cannot load",async({page})=>{
   await page.route("**/stockfish-18-lite-single.js",route=>route.abort());
   await page.goto(siteUrl("/zh-CN"));await page.locator("#nickname").fill("备用引擎测试");await page.locator("form button[type=submit]").click();
+  await page.getByTestId("engine-select").selectOption("stockfish");
   await page.locator("[data-square='e2']").click();await page.locator("[data-square='e4']").click();
   await expect(page.locator(".app-shell")).toHaveAttribute("data-opponent-engine","starter",{timeout:15_000});
   await expect(page.locator('[data-message-type="coach_comment"]').first()).toBeVisible({timeout:15_000});
@@ -83,6 +93,17 @@ test("a player can select and retain the starter engine",async({page})=>{
   await page.locator("[data-square='e2']").click();await page.locator("[data-square='e4']").click();
   await expect(page.locator(".app-shell")).toHaveAttribute("data-opponent-engine","starter",{timeout:15_000});
   await page.reload();await expect(page.getByTestId("engine-select")).toHaveValue("starter");
+});
+
+test("a player can select and retain the growing engine",async({page})=>{
+  await page.goto(siteUrl("/zh-CN"));await page.locator("#nickname").fill("成长引擎测试");await page.locator("form button[type=submit]").click();
+  await expect(page.getByTestId("engine-select").locator("option")).toHaveCount(3);
+  await page.getByTestId("engine-select").selectOption("growing");
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!).opponentEngine)).toBe("growing");
+  await page.locator("[data-square='e2']").click();await page.locator("[data-square='e4']").click();
+  await expect(page.locator(".app-shell")).toHaveAttribute("data-opponent-engine","growing");
+  await expect(page.locator('[data-message-type="opponent_decision"]')).toBeVisible({timeout:15_000});
+  await page.reload();await expect(page.getByTestId("engine-select")).toHaveValue("growing");
 });
 
 test("a new move after reviewing history discards the abandoned future branch",async({page})=>{

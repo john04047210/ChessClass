@@ -14,6 +14,7 @@ export type RequestedDetail = "default" | "more" | "hint_1" | "hint_2" | "hint_3
 export type CoachProvider = "openai" | "local_fallback";
 export type CoachMode = "disabled" | "local" | "remote_gateway";
 export type PlayerGender = "male" | "female" | "undisclosed";
+export type OpponentEngineId = "starter" | "growing" | "stockfish";
 export type ConversationRole = "player" | "opponent" | "coach" | "system";
 export type ConversationMessageType = "player_move" | "opponent_thinking" | "opponent_analysis" | "opponent_decision" | "coach_comment" | "coach_advice" | "player_question" | "rule_explanation" | "system_notice" | "error";
 export type ConversationMessageStatus = "pending" | "streaming" | "complete" | "cancelled" | "error";
@@ -108,8 +109,9 @@ export interface PlayerProfile {
   playerId: string;
   nickname: string;
   preferredLocale: SupportedLocale;
-  opponentEngine?: "stockfish" | "starter";
+  opponentEngine?: OpponentEngineId;
   coachMode?: CoachMode;
+  guideDismissed?: boolean;
   gender?: PlayerGender;
   avatarId?: "male" | "female" | "neutral";
   createdAt: string;

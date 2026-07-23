@@ -23,12 +23,12 @@
 - 原因：避免界面、电脑引擎和教练各自实现棋规造成不一致。
 - 影响：Stockfish 或本地启蒙引擎返回的着法仍需通过 chess.js 验证后才能落子。
 
-## D-004：Stockfish Lite 为默认引擎，启蒙引擎永久保留
+## D-004：Stockfish Lite 为默认引擎，本地较弱引擎永久保留
 
 - 状态：采用
-- 决策：默认使用 Stockfish 18 Lite 单线程 WASM，同时保留 `BeginnerOpponentEngine`。
+- 决策：默认使用 Stockfish 18 Lite 单线程 WASM，同时保留 `BeginnerOpponentEngine`，并提供独立的两层简化搜索 `GrowingOpponentEngine` 作为中间档。
 - 原因：Lite 版本约 7 MB，棋力足够，兼容无需特殊响应头的静态托管；备用引擎适合更弱对手、旧设备和加载故障。
-- 影响：Stockfish 在 Web Worker 内运行；界面允许玩家选择引擎；加载失败必须自动降级。
+- 影响：Stockfish 在 Web Worker 内运行；界面允许玩家选择小白、成长、进阶三档；成长档不得伪装成 Stockfish 分析，Stockfish 加载失败必须自动降级。
 
 ## D-005：用户数据本地优先
 
