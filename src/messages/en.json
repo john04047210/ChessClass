@@ -1,7 +1,34 @@
 {
   "meta": {
-    "title": "Kiro · AI Chess Coach",
-    "description": "A chess coach for complete beginners"
+    "title": "Chess Practice for Complete Beginners | Chess9527",
+    "description": "Practice chess for free against three levels of computer opponent. No sign-up is needed, and every move is explained in plain language with rules and practical tips."
+  },
+  "seo": {
+    "rootTitle": "Free Chess Practice for Complete Beginners | Chess9527",
+    "rootDescription": "Practice chess for free with no sign-up, learn piece movement, rules and useful playing habits as you play, and choose Simplified Chinese, English or Japanese.",
+    "eyebrow": "Made for complete beginners",
+    "heading": "Learn chess one move at a time",
+    "intro": "You do not need to memorize every rule first. Play White against a computer buddy, read each move in plain language, and review positions with unlimited undo and redo.",
+    "featuresTitle": "A beginner-friendly way to practice",
+    "featureOneTitle": "Three computer levels",
+    "featureOneBody": "Choose Easy, Practice or Challenge mode and learn at your own pace.",
+    "featureTwoTitle": "Every move explained plainly",
+    "featureTwoBody": "See the piece, starting square, destination and standard notation together.",
+    "featureThreeTitle": "Rules and tips are always available",
+    "featureThreeBody": "Review piece movement, castling, check, checkmate and useful opening habits at any time.",
+    "featureFourTitle": "Free and saved locally",
+    "featureFourBody": "No account is required. Your nickname, games and progress stay in this browser.",
+    "stepsTitle": "How to start",
+    "stepOne": "Enter a nickname and choose an avatar style.",
+    "stepTwo": "Play the first move as White and wait for the computer reply.",
+    "stepThree": "Read the explanation and compare ideas with undo and redo.",
+    "practiceLink": "Start practicing",
+    "rulesLink": "Read the chess rules",
+    "tipsLink": "Read beginner chess tips",
+    "languageLinks": "Choose site language",
+    "backToPractice": "Back to chess practice",
+    "rulesDescription": "Learn the board, all six pieces, check, checkmate, castling, promotion, en passant and chess notation in plain language.",
+    "tipsDescription": "Practical beginner advice about development, the center, king safety, piece values and reviewing a game."
   },
   "common": {
     "continue": "Keep playing",
@@ -48,6 +75,8 @@
     "draw": "Draw",
     "white": "White",
     "black": "Black",
+    "boardLabel": "Chess board",
+    "emptySquare": "empty square",
     "illegal": "That move is not legal. The position has not changed.",
     "notYourPiece": "Choose a white piece.",
     "notYourTurn": "It is the computer's turn. Please wait.",

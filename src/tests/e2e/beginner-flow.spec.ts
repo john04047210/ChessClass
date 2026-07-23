@@ -3,9 +3,11 @@ import { test,expect } from "@playwright/test";
 const sitePath = process.env.E2E_BASE_PATH || "";
 const siteUrl = (path: string) => `${sitePath}${path}`;
 
+const boardLabels:Record<string,string>={"zh-CN":"国际象棋棋盘",en:"Chess board",ja:"チェス盤"};
+
 for (const locale of ["zh-CN","en","ja"]) test(`beginner flow works in ${locale}`,async({page})=>{
   await page.goto(siteUrl(`/${locale}`)); await page.locator("#nickname").fill(`Learner-${locale}`); await page.locator("form button[type=submit]").click();
-  await expect(page.locator("[aria-label='Chess board']")).toBeVisible();
+  await expect(page.locator(`[aria-label='${boardLabels[locale]}']`)).toBeVisible();
   if(locale==="zh-CN"){await page.locator("[data-square='b1']").hover();await expect(page.getByRole("tooltip")).toHaveText("白方 · 马",{timeout:2_000});await expect(page.getByRole("tooltip")).toBeHidden({timeout:2_500});await page.locator("[data-square='e2']").hover();}
   const playerId=await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!).playerId);
   await page.locator("[data-square='e2']").click(); await page.locator("[data-square='e4']").click();
@@ -24,7 +26,7 @@ for (const locale of ["zh-CN","en","ja"]) test(`beginner flow works in ${locale}
   const fen=await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!).currentGame.fen); expect(fen).toBeTruthy();
   await page.getByTestId("undo").click();expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!).currentGame.fen)).not.toBe(fen);
   await page.getByTestId("redo").click();expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!).currentGame.fen)).toBe(fen);
-  await page.reload(); await expect(page.locator("[aria-label='Chess board']")).toBeVisible();
+  await page.reload(); await expect(page.locator(`[aria-label='${boardLabels[locale]}']`)).toBeVisible();
   await expect(page.locator('[data-message-type="coach_comment"] p').first()).toHaveText(coachText);
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!).playerId)).toBe(playerId);
   await page.locator("#locale").selectOption(locale==="en"?"ja":"en"); await page.waitForURL(/\/(en|ja)\/?$/);
@@ -69,6 +71,33 @@ test("the static root selects a locale without a server redirect",async({page})=
   await page.goto(siteUrl("/"));
   await page.waitForURL(/\/(zh-CN|en|ja)\/?$/);
   await expect(page.locator("#nickname")).toBeVisible();
+});
+
+test("search engines receive static localized content and discovery files",async({request})=>{
+  const chinese=await request.get(siteUrl("/zh-CN/"));expect(chinese.ok()).toBe(true);
+  const html=await chinese.text();
+  expect(html).toContain("从第一步开始，边下边学国际象棋");
+  expect(html).toContain('rel="canonical" href="https://chess9527.com/zh-CN/"');
+    expect(html).toContain('hrefLang="en"');
+  const robots=await request.get(siteUrl("/robots.txt"));expect(robots.ok()).toBe(true);expect(await robots.text()).toContain("Sitemap: https://chess9527.com/sitemap.xml");
+  const sitemap=await request.get(siteUrl("/sitemap.xml"));expect(sitemap.ok()).toBe(true);expect(await sitemap.text()).toContain("https://chess9527.com/ja/tips/");
+});
+
+test("the Baidu verification files are published at the site root",async({request})=>{
+  const verificationFiles={
+    "/baidu_verify_codeva-YsESFE2Mq1.html":"e231fe267534e8693e696eaef8c94d85",
+    "/baidu_verify_codeva-Y5sYBxcRWI.html":"e6090a1bcfb61072beb235be7df5f17c",
+  };
+  for(const [path,expected] of Object.entries(verificationFiles)){
+    const response=await request.get(siteUrl(path));
+    expect(response.ok()).toBe(true);
+    expect((await response.text()).trim()).toBe(expected);
+  }
+});
+
+test("public rules and tips are available in every language",async({page})=>{
+  const pages=[["/zh-CN/rules/","国际象棋规则"],["/en/tips/","Practical Tips"],["/ja/rules/","チェスのルール"]] as const;
+  for(const [path,title] of pages){await page.goto(siteUrl(path));await expect(page.getByRole("heading",{level:1,name:title})).toBeVisible();}
 });
 
 test("a first-time visitor can change language before creating a profile",async({page})=>{
@@ -120,7 +149,7 @@ test("a new move after reviewing history discards the abandoned future branch",a
 test("Chinese nickname works when the mobile browser has no crypto.randomUUID",async({page})=>{
   await page.addInitScript(()=>{Object.defineProperty(Crypto.prototype,"randomUUID",{value:undefined,configurable:true});});
   await page.goto(siteUrl("/ja"));await page.locator("#nickname").fill("中文昵称");await page.locator("form button[type=submit]").click();
-  await expect(page.locator("[aria-label='Chess board']")).toBeVisible();
+  await expect(page.locator("[aria-label='チェス盤']")).toBeVisible();
   const profile=await page.evaluate(()=>JSON.parse(localStorage.getItem("chess-coach-player-v1")!));
   expect(profile.nickname).toBe("中文昵称");expect(profile.playerId).toMatch(/^[0-9a-f-]{36}$/);
 });

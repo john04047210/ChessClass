@@ -1,7 +1,34 @@
 {
   "meta": {
-    "title": "棋路 · AI 国际象棋陪练",
-    "description": "为零基础学习者设计的国际象棋陪练"
+    "title": "零基础国际象棋陪练｜边下边学规则与实战技巧｜Chess9527",
+    "description": "面向国际象棋初学者的免费电脑陪练。无需注册，打开浏览器即可对局，边下边学习棋子走法、基础规则、国际记谱和实战技巧。"
+  },
+  "seo": {
+    "rootTitle": "零基础国际象棋陪练｜Chess9527",
+    "rootDescription": "免费的零基础国际象棋电脑陪练，无需注册即可边下边学习棋子走法、基础规则和实战技巧，支持简体中文、English 和日本語。",
+    "eyebrow": "为零基础玩家准备",
+    "heading": "从第一步开始，边下边学国际象棋",
+    "intro": "不用先背完整本规则。你执白方和电脑棋友对局，系统会用白话说明走法，并允许你反复悔棋和复盘。",
+    "featuresTitle": "适合初学者的练习方式",
+    "featureOneTitle": "三档电脑棋友",
+    "featureOneBody": "从轻松、练习到挑战模式，按自己的节奏选择对手。",
+    "featureTwoTitle": "走法都有白话说明",
+    "featureTwoBody": "同时显示棋子、起点、终点和标准记谱，第一次下棋也能看懂。",
+    "featureThreeTitle": "随时查看规则与技巧",
+    "featureThreeBody": "棋子的走法、王车易位、将军、将死和开局习惯都可以随时复习。",
+    "featureFourTitle": "本地保存，免费练习",
+    "featureFourBody": "无需注册，昵称、棋局和学习进度只保存在当前浏览器。",
+    "stepsTitle": "怎样开始",
+    "stepOne": "输入昵称，选择自己的头像风格。",
+    "stepTwo": "执白方走出第一步，电脑会完成回应。",
+    "stepThree": "查看白话讲解，用悔棋和取消悔棋反复比较走法。",
+    "practiceLink": "开始练习",
+    "rulesLink": "查看国际象棋规则",
+    "tipsLink": "查看初学者实战技巧",
+    "languageLinks": "选择网站语言",
+    "backToPractice": "返回对局练习",
+    "rulesDescription": "用白话了解棋盘、六种棋子、将军、将死、王车易位、升变、吃过路兵和记谱法。",
+    "tipsDescription": "适合国际象棋初学者的开局、中心、王的安全、子力价值和复盘技巧。"
   },
   "common": {
     "continue": "继续下棋",
@@ -48,6 +75,8 @@
     "draw": "和棋",
     "white": "白方",
     "black": "黑方",
+    "boardLabel": "国际象棋棋盘",
+    "emptySquare": "空格",
     "illegal": "这一步不符合规则，棋局没有改变。",
     "notYourPiece": "请选择白方棋子。",
     "notYourTurn": "现在是电脑回合，请稍等。",

@@ -1,4 +1,4 @@
-# 棋路 · 国际象棋零基础 AI 陪练
+# 棋路 · 国际象棋零基础陪练
 
 一个面向完全零基础用户的网页版国际象棋陪练。用户无需注册，输入昵称即可执白棋与初学者电脑对弈；每个完整回合都会获得简短讲解、谨慎表述的意图猜测和下一步观察提示。
 
@@ -9,6 +9,7 @@
 - [产品路线图](docs/ROADMAP.md)
 - [局面感知型本地教练草案](docs/features/position-aware-local-coach.md)
 - [右侧真人式对话教练改造方案 v3](docs/features/conversational-coach-v3.md)
+- [搜索与多语言公开内容方案](docs/features/search-and-multilingual-discovery.md)
 - [Codex 项目协作规范](AGENTS.md)
 
 ## MVP 功能
@@ -18,6 +19,7 @@
 - 默认使用浏览器本地的 Stockfish 18 轻量单线程 WASM，对不支持 WASM 或加载失败的设备自动降级到 `BeginnerOpponentEngine`
 - 电脑对手提供小白、成长、进阶三档；成长档使用本地两层简化搜索填补启蒙规则与专业引擎之间的棋力差距
 - 简体中文、英文、日文界面与三语本地教练
+- 三语可索引首页、公开规则与技巧页，并提供 canonical、hreflang、robots.txt 和 sitemap.xml
 - 昵称、匿名 UUID、学习进度和未完成棋局保存在 `localStorage`
 - 默认在浏览器内运行三语本地教练，零 API 成本且无需应用服务器
 - 可选外部个人教练网关；过时请求取消和回合身份校验避免旧回复覆盖棋局
@@ -88,6 +90,18 @@ NEXT_PUBLIC_COACH_API_URL=https://your-gateway.example.com/coach
 ## 国际化
 
 当前路由为 `/zh-CN`、`/en`、`/ja`，语言文件位于 `src/messages/`。领域模型只保存稳定的 `RuleKey` 和标准 FEN/PGN/SAN。新增语言时：复制一个 JSON 文件、保持 key 完全一致，在 `supportedLocales`、`messages` 和语言选择器中注册，并运行 `npm test`。切换语言不会改变 playerId、FEN 或 PGN，之后的讲解使用新语言；既有讲解不会自动翻译。
+
+## 搜索引擎与公开页面
+
+主站规范域名为 `https://chess9527.com`。根页面和三个语言入口都包含服务端生成、无需执行 JavaScript 即可读取的产品正文；每种语言还提供独立的规则与技巧页面：
+
+- `/zh-CN/`、`/en/`、`/ja/`
+- `/{locale}/rules/`
+- `/{locale}/tips/`
+- `/robots.txt`
+- `/sitemap.xml`
+
+页面标题、说明、Open Graph、Twitter Card、canonical 与 hreflang 均按语言生成。对外定位是“面向零基础玩家的国际象棋陪练”，不把可选远程 AI 当作核心卖点。
 
 ## 本地数据说明
 

@@ -12,10 +12,12 @@ interface Props {
   flipped: boolean; locked: boolean; onSquare: (square: string) => void; onDrop: (from: string, to: string) => void;
   pieceLabels: Record<(typeof pieceKeys)[keyof typeof pieceKeys], string>;
   sideLabels: { white: string; black: string };
+  boardLabel: string;
+  emptySquareLabel: string;
   opponentPreview?: { from: string; to: string; phase: "preparing" | "landed" } | null;
 }
 
-export function ChessBoard({ fen, selected, legalTargets, lastMove, flipped, locked, onSquare, onDrop, pieceLabels, sideLabels, opponentPreview }: Props) {
+export function ChessBoard({ fen, selected, legalTargets, lastMove, flipped, locked, onSquare, onDrop, pieceLabels, sideLabels, boardLabel, emptySquareLabel, opponentPreview }: Props) {
   const chess = useMemo(() => new Chess(fen), [fen]);
   const tooltipShowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tooltipHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,7 +57,7 @@ export function ChessBoard({ fen, selected, legalTargets, lastMove, flipped, loc
   return <div className="board-coordinate-frame" data-animation-phase={opponentPreview?.phase}>
     <div className="file-axis file-axis-top" aria-hidden="true">{files.map((file) => <span key={file}>{file.toUpperCase()}</span>)}</div>
     <div className="rank-axis rank-axis-left" aria-hidden="true">{ranks.map((rank) => <span key={rank}>{rank}</span>)}</div>
-    <div className="board-wrap" aria-label="Chess board">
+    <div className="board-wrap" aria-label={boardLabel}>
       <div className="board">
       {ranks.flatMap((rank) => files.map((file) => {
         const square = `${file}${rank}` as Square;
@@ -67,7 +69,7 @@ export function ChessBoard({ fen, selected, legalTargets, lastMove, flipped, loc
         const isLandedTarget = opponentPreview?.phase === "landed" && opponentPreview.to === square;
         const className = ["square", (Number(file.charCodeAt(0)) + rank) % 2 ? "light" : "dark", selected === square ? "selected" : "", isLast ? "last" : "", checkedKing === square ? "check" : "", isPreparingTarget ? "opponent-target" : "", isLandedTarget ? "opponent-landed-square" : ""].filter(Boolean).join(" ");
         return <button key={square} type="button" data-square={square} className={className} aria-disabled={locked}
-          aria-label={`${square}${piece ? ` ${pieceLabel}` : " empty"}`}
+          aria-label={`${square}${piece ? ` ${pieceLabel}` : ` ${emptySquareLabel}`}`}
           onClick={() => onSquare(square)} onDragOver={(e) => { if (!locked) e.preventDefault(); }}
           onMouseEnter={(e) => { if (piece) queueTooltip(e.currentTarget, pieceLabel); }} onMouseLeave={hideTooltip}
           onFocus={(e) => { if (piece) queueTooltip(e.currentTarget, pieceLabel); }} onBlur={hideTooltip}

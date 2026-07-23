@@ -1,19 +1,37 @@
-"use client";
-
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { defaultLocale, isSupportedLocale, matchLocale } from "@/lib/i18n/locale";
+import type { Metadata } from "next";
+import { LocaleRedirect } from "@/components/LocaleRedirect";
+import { RootLanding } from "@/components/RootLanding";
 import { getMessages } from "@/lib/i18n/messages";
-import { PROFILE_KEY } from "@/lib/player/storage";
+import { absoluteUrl, localizedAlternates, SITE_NAME } from "@/lib/seo/site";
+
+const messages = getMessages("zh-CN");
+
+export const metadata: Metadata = {
+  title: messages.seo.rootTitle,
+  description: messages.seo.rootDescription,
+  alternates: {
+    canonical: absoluteUrl("/"),
+    languages: localizedAlternates(),
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: messages.seo.rootTitle,
+    description: messages.seo.rootDescription,
+    url: absoluteUrl("/"),
+    images: [{ url: absoluteUrl("/og-image.png"), width: 1200, height: 630, alt: messages.seo.rootTitle }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: messages.seo.rootTitle,
+    description: messages.seo.rootDescription,
+    images: [absoluteUrl("/og-image.png")],
+  },
+};
 
 export default function Home() {
-  const router = useRouter();
-  useEffect(() => {
-    let savedLocale: string | undefined;
-    try { savedLocale = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null")?.preferredLocale; } catch { /* use another signal */ }
-    const cookieLocale = document.cookie.split(";").map((item)=>item.trim()).find((item)=>item.startsWith("chess-locale="))?.split("=")[1];
-    const locale = savedLocale && isSupportedLocale(savedLocale) ? savedLocale : cookieLocale && isSupportedLocale(cookieLocale) ? cookieLocale : matchLocale(navigator.languages?.[0] || navigator.language);
-    router.replace(`/${locale}`);
-  }, [router]);
-  return <div className="app-shell">{getMessages(defaultLocale).common.loading}</div>;
+  return <>
+    <LocaleRedirect />
+    <RootLanding />
+  </>;
 }

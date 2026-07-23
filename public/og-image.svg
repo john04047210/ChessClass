@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#faf7ee"/>
+      <stop offset="1" stop-color="#dfece3"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#183a2c" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#background)"/>
+  <circle cx="1050" cy="82" r="230" fill="#cfe2d5" opacity=".55"/>
+  <circle cx="112" cy="610" r="250" fill="#eee2bd" opacity=".5"/>
+  <g filter="url(#shadow)">
+    <rect x="92" y="92" width="214" height="214" rx="52" fill="#214d3b"/>
+    <text x="199" y="244" text-anchor="middle" fill="#fffdf7" font-size="142" font-family="Georgia, serif">♞</text>
+  </g>
+  <text x="360" y="176" fill="#246149" font-size="28" font-weight="700" font-family="Arial, sans-serif" letter-spacing="4">CHESS9527</text>
+  <text x="360" y="262" fill="#17372b" font-size="64" font-weight="800" font-family="Arial, sans-serif">Learn chess one move</text>
+  <text x="360" y="338" fill="#17372b" font-size="64" font-weight="800" font-family="Arial, sans-serif">at a time</text>
+  <text x="360" y="409" fill="#5a6b62" font-size="30" font-family="Arial, sans-serif">Free practice for complete beginners</text>
+  <g transform="translate(360 470)">
+    <rect width="178" height="58" rx="29" fill="#fff" stroke="#c9d8ce"/>
+    <text x="89" y="38" text-anchor="middle" fill="#285d49" font-size="22" font-weight="700" font-family="Arial, sans-serif">Easy</text>
+    <rect x="194" width="178" height="58" rx="29" fill="#fff" stroke="#c9d8ce"/>
+    <text x="283" y="38" text-anchor="middle" fill="#285d49" font-size="22" font-weight="700" font-family="Arial, sans-serif">Practice</text>
+    <rect x="388" width="178" height="58" rx="29" fill="#1f684d"/>
+    <text x="477" y="38" text-anchor="middle" fill="#fff" font-size="22" font-weight="700" font-family="Arial, sans-serif">Challenge</text>
+  </g>
+</svg>

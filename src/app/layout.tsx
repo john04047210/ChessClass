@@ -1,5 +1,17 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
-export const metadata: Metadata = { title:"棋路 · 国际象棋学习陪练", description:"通过对局、规则和本地棋力引擎学习国际象棋" };
-export default function RootLayout({children}:{children:React.ReactNode}) { return <html suppressHydrationWarning><body>{children}</body></html>; }
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  category: "education",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+  },
+};
+
+export default function RootLayout({children}:{children:React.ReactNode}) {
+  return <html suppressHydrationWarning><body>{children}</body></html>;
+}
